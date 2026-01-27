@@ -1,5 +1,6 @@
 const express = require('express');
 const db = require('../db');
+const accountQueries = require('../db/queries/accounts');
 
 const router = express.Router();
 
@@ -38,6 +39,51 @@ router.get('/balance', async (req, res) => {
   } catch (error) {
     console.error('Error fetching balance:', error);
     res.status(500).json({ error: 'Failed to fetch balance' });
+  }
+});
+
+// Get current user's accounts with balances
+router.get('/accounts', async (req, res) => {
+  try {
+    const result = await db.query(
+      accountQueries.getAccountsByUserId,
+      [req.user.id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching accounts:', error);
+    res.status(500).json({ error: 'Failed to fetch accounts' });
+  }
+});
+
+// Create new account for current user
+router.post('/accounts', async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Account name is required' });
+    }
+
+    const result = await db.query(
+      accountQueries.createAccount,
+      [name.trim(), req.user.id]
+    );
+
+    // Fetch the account with balance (will be 0)
+    const accountResult = await db.query(
+      accountQueries.getAccountById,
+      [result.rows[0].id]
+    );
+
+    res.status(201).json(accountResult.rows[0]);
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(400).json({ error: 'Account name already exists' });
+    }
+    console.error('Error creating account:', error);
+    res.status(500).json({ error: 'Failed to create account' });
   }
 });
 

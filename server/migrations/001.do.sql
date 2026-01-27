@@ -15,4 +15,6 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_users_name ON public.users("name");
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users("role");
-CREATE INDEX IF NOT EXISTS idx_users_deleted_on ON public.users("deletedOn") WHERE "deletedOn" IS NULL;
+
+-- Unique constraint on name for non-deleted users only
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name_unique ON public.users("name") WHERE "deletedOn" IS NULL;

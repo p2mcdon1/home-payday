@@ -63,8 +63,8 @@ function UserDashboard({ user, onLogout }) {
         <Container className="mt-5">
           <Card>
             <Card.Body className="text-center">
-              <Card.Title>No Employee Profile Found</Card.Title>
-              <Card.Text>Please contact an administrator to set up your employee profile.</Card.Text>
+              <Card.Title>No User Profile Found</Card.Title>
+              <Card.Text>Please contact an administrator to set up your user profile.</Card.Text>
             </Card.Body>
           </Card>
         </Container>
@@ -104,10 +104,10 @@ function UserDashboard({ user, onLogout }) {
           <Card.Body>
             <Card.Title className="text-muted mb-3">Current Balance</Card.Title>
             <h1 className="display-4 fw-bold text-primary mb-4">
-              ${parseFloat(profile.current_balance).toFixed(2)}
+              ${parseFloat(profile.currentBalance || 0).toFixed(2)}
             </h1>
             <div className="border-top pt-3 mt-3 text-start">
-              <p className="mb-1"><strong>Employee ID:</strong> {profile.employee_id}</p>
+              <p className="mb-1"><strong>User ID:</strong> {profile.id}</p>
               <p className="mb-0"><strong>Name:</strong> {profile.name}</p>
             </div>
           </Card.Body>
@@ -131,20 +131,20 @@ function UserDashboard({ user, onLogout }) {
                 <tbody>
                   {transactions.map((transaction) => (
                     <tr key={transaction.id}>
-                      <td>{new Date(transaction.created_at).toLocaleString()}</td>
+                      <td>{new Date(transaction.createdAt).toLocaleString()}</td>
                       <td>
-                        <Badge bg={getBadgeVariant(transaction.transaction_type)}>
-                          {transaction.transaction_type.toUpperCase()}
+                        <Badge bg={getBadgeVariant(transaction.transactionType)}>
+                          {transaction.transactionType.toUpperCase()}
                         </Badge>
                       </td>
                       <td
                         className={`fw-bold ${
-                          transaction.transaction_type === 'earn'
+                          transaction.transactionType === 'earn'
                             ? 'text-success'
                             : 'text-danger'
                         }`}
                       >
-                        {transaction.transaction_type === 'earn' ? '+' : '-'}$
+                        {transaction.transactionType === 'earn' ? '+' : '-'}$
                         {parseFloat(transaction.amount).toFixed(2)}
                       </td>
                       <td>{transaction.description || '-'}</td>

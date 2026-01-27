@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import { Navbar, Nav, Container } from 'react-bootstrap';
-import EmployeesList from './admin/EmployeesList';
-import EmployeeDetail from './admin/EmployeeDetail';
+import UsersList from './admin/UsersList';
+import UserDetail from './admin/UserDetail';
 import TransactionsList from './admin/TransactionsList';
 
 function AdminDashboard({ user, onLogout }) {
@@ -21,7 +21,7 @@ function AdminDashboard({ user, onLogout }) {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
-              <Nav.Link as={Link} to="/admin/employees">Employees</Nav.Link>
+              <Nav.Link as={Link} to="/admin/users">Users</Nav.Link>
               <Nav.Link as={Link} to="/admin/transactions">Transactions</Nav.Link>
             </Nav>
             <Nav>
@@ -34,10 +34,10 @@ function AdminDashboard({ user, onLogout }) {
 
       <Container fluid className="mt-4">
         <Routes>
-          <Route path="/employees" element={<EmployeesList />} />
-          <Route path="/employees/:id" element={<EmployeeDetail />} />
+          <Route path="/users" element={<UsersList />} />
+          <Route path="/users/:id" element={<UserDetail />} />
           <Route path="/transactions" element={<TransactionsList />} />
-          <Route path="/" element={<Navigate to="/admin/employees" />} />
+          <Route path="/" element={<Navigate to="/admin/users" />} />
         </Routes>
       </Container>
     </div>

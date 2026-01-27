@@ -1,7 +1,7 @@
 {
   "name": "home-payday",
   "version": "1.0.0",
-  "description": "Employee earnings tracking application",
+  "description": "User earnings tracking application",
   "main": "server/index.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
@@ -10,7 +10,7 @@
     "install-all": "npm install && cd server && npm install && cd ../client && npm install",
     "build": "cd client && npm run build"
   },
-  "keywords": ["payday", "earnings", "employee"],
+  "keywords": ["payday", "earnings", "user"],
   "author": "",
   "license": "ISC",
   "devDependencies": {

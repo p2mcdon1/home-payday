@@ -1,13 +1,14 @@
+// Load environment variables FIRST before any other requires
+const dotenv = require('dotenv');
+dotenv.config();
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const db = require('./db');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/user');
 const { authenticateToken, loadUser, requireAdmin, handleJWTError } = require('./middleware/auth');
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

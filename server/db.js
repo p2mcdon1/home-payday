@@ -1,7 +1,5 @@
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
-const fs = require('fs');
-const path = require('path');
 const userQueries = require('./db/queries/users');
 
 dotenv.config();
@@ -14,32 +12,16 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'postgres',
 });
 
-// Initialize database schema
+// Initialize database connection
+// Note: Schema creation should be done via migrations (npm run db:migrate)
 async function init() {
   try {
-    // Read and execute users schema file
-    const usersSchemaPath = path.join(__dirname, 'db', 'users.sql');
-    const usersSchema = fs.readFileSync(usersSchemaPath, 'utf8');
-    
-    await pool.query(usersSchema);
-    console.log('Users table schema initialized successfully');
-    
-    // Create default admin user if it doesn't exist
-    const adminCheck = await pool.query(
-      userQueries.checkUserExists,
-      ['admin']
-    );
-    
-    if (adminCheck.rows.length === 0) {
-      // Store password in plain text (as requested)
-      await pool.query(
-        userQueries.createUser,
-        ['admin', 'admin123', 'admin']
-      );
-      console.log('Default admin user created (name: admin, password: admin123)');
-    }
+    // Test connection
+    await pool.query('SELECT NOW()');
+    console.log('Database connection established');
+    console.log('Note: Run "npm run db:migrate" to set up schema');
   } catch (error) {
-    console.error('Database initialization error:', error);
+    console.error('Database connection error:', error);
     throw error;
   }
 }

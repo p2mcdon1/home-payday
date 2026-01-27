@@ -3,29 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Button, Form, Table, Alert, Spinner } from 'react-bootstrap';
 import api from '../../utils/api';
 
-function EmployeesList() {
-  const [employees, setEmployees] = useState([]);
+function UsersList() {
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
-    employee_id: '',
     name: '',
-    email: '',
+    role: 'user',
+    password: '',
   });
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchEmployees();
+    fetchUsers();
   }, []);
 
-  const fetchEmployees = async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/admin/employees');
-      setEmployees(response.data);
+      const response = await api.get('/admin/users');
+      setUsers(response.data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to load employees');
+      setError(err.response?.data?.error || 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -34,12 +34,12 @@ function EmployeesList() {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/admin/employees', formData);
+      await api.post('/admin/users', formData);
       setShowCreateForm(false);
-      setFormData({ employee_id: '', name: '', email: '' });
-      fetchEmployees();
+      setFormData({ name: '', role: 'user', password: '' });
+      fetchUsers();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create employee');
+      setError(err.response?.data?.error || 'Failed to create user');
     }
   };
 
@@ -54,12 +54,12 @@ function EmployeesList() {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Employees</h2>
+        <h2>Users</h2>
         <Button
           variant={showCreateForm ? 'secondary' : 'success'}
           onClick={() => setShowCreateForm(!showCreateForm)}
         >
-          {showCreateForm ? 'Cancel' : '+ Add Employee'}
+          {showCreateForm ? 'Cancel' : '+ Add User'}
         </Button>
       </div>
 
@@ -68,19 +68,8 @@ function EmployeesList() {
       {showCreateForm && (
         <Card className="mb-4">
           <Card.Body>
-            <Card.Title>Create New Employee</Card.Title>
+            <Card.Title>Create New User</Card.Title>
             <Form onSubmit={handleCreate}>
-              <Form.Group className="mb-3">
-                <Form.Label>Employee ID *</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={formData.employee_id}
-                  onChange={(e) =>
-                    setFormData({ ...formData, employee_id: e.target.value })
-                  }
-                  required
-                />
-              </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Name *</Form.Label>
                 <Form.Control
@@ -93,26 +82,40 @@ function EmployeesList() {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Email</Form.Label>
-                <Form.Control
-                  type="email"
-                  value={formData.email}
+                <Form.Label>Role *</Form.Label>
+                <Form.Select
+                  value={formData.role}
                   onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
+                    setFormData({ ...formData, role: e.target.value })
                   }
+                  required
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </Form.Select>
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Password *</Form.Label>
+                <Form.Control
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  required
                 />
               </Form.Group>
               <Button type="submit" variant="primary">
-                Create Employee
+                Create User
               </Button>
             </Form>
           </Card.Body>
         </Card>
       )}
 
-      {employees.length === 0 ? (
+      {users.length === 0 ? (
         <Alert variant="info" className="text-center">
-          No employees found
+          No users found
         </Alert>
       ) : (
         <Card>
@@ -120,29 +123,19 @@ function EmployeesList() {
             <Table striped bordered hover responsive>
               <thead>
                 <tr>
-                  <th>Employee ID</th>
+                  <th>ID</th>
                   <th>Name</th>
-                  <th>Email</th>
-                  <th>Balance</th>
-                  <th>Actions</th>
+                  <th>Role</th>
+                  <th>Created On</th>
                 </tr>
               </thead>
               <tbody>
-                {employees.map((employee) => (
-                  <tr key={employee.id}>
-                    <td>{employee.employee_id}</td>
-                    <td>{employee.name}</td>
-                    <td>{employee.email || '-'}</td>
-                    <td>${parseFloat(employee.current_balance).toFixed(2)}</td>
-                    <td>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => navigate(`/admin/employees/${employee.id}`)}
-                      >
-                        View Details
-                      </Button>
-                    </td>
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.name}</td>
+                    <td>{user.role}</td>
+                    <td>{new Date(user.createdOn).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -154,4 +147,4 @@ function EmployeesList() {
   );
 }
 
-export default EmployeesList;
+export default UsersList;

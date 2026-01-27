@@ -1,20 +1,20 @@
 # Home Payday
 
-Employee earnings tracking application with admin and user interfaces.
+User earnings tracking application with admin and user interfaces.
 
 ## Features
 
 - **Admin Interface:**
-  - Manage employees (create, view, update)
-  - Add earnings to employee accounts
-  - Deduct money from employee accounts
+  - Manage users (create, view, update)
+  - Add earnings to user accounts
+  - Deduct money from user accounts
   - Process payments
   - View all transactions
 
 - **User Interface:**
   - View current balance
   - View transaction history
-  - See employee profile information
+  - See user profile information
 
 ## Tech Stack
 
@@ -56,7 +56,7 @@ Employee earnings tracking application with admin and user interfaces.
 
 ### Default Admin Account
 
-- **Email:** admin@payday.com
+- **Name:** admin
 - **Password:** admin123
 
 **Important:** Change the default admin password in production!
@@ -85,27 +85,22 @@ home-payday/
 - `POST /api/auth/login` - Login
 
 ### Admin Routes (require admin role)
-- `GET /api/admin/employees` - Get all employees
-- `POST /api/admin/employees` - Create employee
-- `GET /api/admin/employees/:id` - Get employee details
-- `PUT /api/admin/employees/:id` - Update employee
-- `POST /api/admin/employees/:id/earn` - Add earnings
-- `POST /api/admin/employees/:id/deduct` - Deduct money
-- `POST /api/admin/employees/:id/payment` - Process payment
+- `GET /api/admin/users` - Get all users
+- `POST /api/admin/users` - Create user
+- `GET /api/admin/users/:id` - Get user details
 - `GET /api/admin/transactions` - Get all transactions
 
 ### User Routes (require authentication)
-- `GET /api/user/profile` - Get user's employee profile
+- `GET /api/user/profile` - Get user's profile
 - `GET /api/user/balance` - Get current balance
 - `GET /api/user/transactions` - Get transaction history
 
 ## Database Schema
 
-- **users:** User accounts for authentication
-- **employees:** Employee profiles linked to users
+- **users:** User accounts for authentication and profile information
 - **transactions:** All earnings, deductions, and payments
 
-The database automatically updates employee balances when transactions are created using PostgreSQL triggers.
+The database automatically updates user balances when transactions are created using PostgreSQL triggers.
 
 ## Development
 

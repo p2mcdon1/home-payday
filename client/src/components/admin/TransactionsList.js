@@ -60,7 +60,7 @@ function TransactionsList() {
               <thead>
                 <tr>
                   <th>Date</th>
-                  <th>Employee</th>
+                  <th>User</th>
                   <th>Type</th>
                   <th>Amount</th>
                   <th>Description</th>
@@ -70,27 +70,27 @@ function TransactionsList() {
               <tbody>
                 {transactions.map((transaction) => (
                   <tr key={transaction.id}>
-                    <td>{new Date(transaction.created_at).toLocaleString()}</td>
+                    <td>{new Date(transaction.createdAt).toLocaleString()}</td>
                     <td>
-                      {transaction.employee_name} ({transaction.employee_code})
+                      {transaction.userName} ({transaction.userId})
                     </td>
                     <td>
-                      <Badge bg={getBadgeVariant(transaction.transaction_type)}>
-                        {transaction.transaction_type.toUpperCase()}
+                      <Badge bg={getBadgeVariant(transaction.transactionType)}>
+                        {transaction.transactionType.toUpperCase()}
                       </Badge>
                     </td>
                     <td
                       className={`fw-bold ${
-                        transaction.transaction_type === 'earn'
+                        transaction.transactionType === 'earn'
                           ? 'text-success'
                           : 'text-danger'
                       }`}
                     >
-                      {transaction.transaction_type === 'earn' ? '+' : '-'}$
+                      {transaction.transactionType === 'earn' ? '+' : '-'}$
                       {parseFloat(transaction.amount).toFixed(2)}
                     </td>
                     <td>{transaction.description || '-'}</td>
-                    <td>{transaction.created_by_name || '-'}</td>
+                    <td>{transaction.createdByName || '-'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -5,19 +5,18 @@ const router = express.Router();
 
 // Note: Authentication is handled in index.js
 
-// Get current user's employee profile
+// Get current user's profile
 router.get('/profile', async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT e.id, e.employee_id, e.name, e.email, e.current_balance, 
-              e.created_at, e.updated_at
-       FROM employees e
-       WHERE e.user_id = $1`,
+      `SELECT "id", "name", "role", "createdOn"
+       FROM public.users
+       WHERE "id" = $1 AND "deletedOn" IS NULL`,
       [req.user.id]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Employee profile not found' });
+      return res.status(404).json({ error: 'User profile not found' });
     }
 
     res.json(result.rows[0]);
@@ -30,21 +29,11 @@ router.get('/profile', async (req, res) => {
 // Get current user's balance
 router.get('/balance', async (req, res) => {
   try {
-    const result = await db.query(
-      `SELECT e.current_balance, e.employee_id, e.name
-       FROM employees e
-       WHERE e.user_id = $1`,
-      [req.user.id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Employee profile not found' });
-    }
-
+    // Note: Balance functionality will be implemented when transactions are linked to users
     res.json({
-      balance: result.rows[0].current_balance,
-      employee_id: result.rows[0].employee_id,
-      name: result.rows[0].name,
+      balance: 0,
+      userId: req.user.id,
+      name: req.user.name,
     });
   } catch (error) {
     console.error('Error fetching balance:', error);
@@ -57,28 +46,16 @@ router.get('/transactions', async (req, res) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
 
-    // First get employee ID
-    const employeeResult = await db.query(
-      'SELECT id FROM employees WHERE user_id = $1',
-      [req.user.id]
-    );
-
-    if (employeeResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Employee profile not found' });
-    }
-
-    const employeeId = employeeResult.rows[0].id;
-
-    // Get transactions
+    // Get transactions for this user
     const result = await db.query(
-      `SELECT t.id, t.amount, t.transaction_type, t.description, t.created_at,
-              u.name as created_by_name
-       FROM transactions t
-       LEFT JOIN users u ON t.created_by = u.id
-       WHERE t.employee_id = $1
-       ORDER BY t.created_at DESC
+      `SELECT t."id", t."amount", t."transactionType", t."description", t."createdAt",
+              u."name" as "createdByName"
+       FROM public.transactions t
+       LEFT JOIN public.users u ON t."createdBy" = u."id"
+       WHERE t."userId" = $1
+       ORDER BY t."createdAt" DESC
        LIMIT $2 OFFSET $3`,
-      [employeeId, parseInt(limit), parseInt(offset)]
+      [req.user.id, parseInt(limit), parseInt(offset)]
     );
 
     res.json(result.rows);

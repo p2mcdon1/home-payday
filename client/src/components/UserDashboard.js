@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar, Container, Card, Table, Badge, Spinner, Alert } from 'react-bootstrap';
+import { Navbar, Container, Card, Table, Badge, Spinner, Alert, Nav } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 
 function UserDashboard({ user, onLogout }) {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const handleLogout = () => {
+    onLogout();
+    navigate('/login');
+  };
 
   useEffect(() => {
     fetchData();
@@ -53,10 +60,10 @@ function UserDashboard({ user, onLogout }) {
           <Container fluid>
             <Navbar.Brand>Home Payday</Navbar.Brand>
             <Navbar.Collapse className="justify-content-end">
-              <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
-              <Navbar.Text onClick={onLogout} style={{ cursor: 'pointer' }}>
-                Logout
-              </Navbar.Text>
+              <Nav>
+                <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
+                <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+              </Nav>
             </Navbar.Collapse>
           </Container>
         </Navbar>
@@ -91,10 +98,10 @@ function UserDashboard({ user, onLogout }) {
         <Container fluid>
           <Navbar.Brand>Home Payday</Navbar.Brand>
           <Navbar.Collapse className="justify-content-end">
-            <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
-            <Navbar.Text onClick={onLogout} style={{ cursor: 'pointer' }}>
-              Logout
-            </Navbar.Text>
+            <Nav>
+              <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
+              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+            </Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>

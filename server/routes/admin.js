@@ -83,6 +83,44 @@ router.post('/users',
   }
 );
 
+// Delete user (soft delete)
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const result = await db.query(
+      userQueries.softDeleteUser,
+      [req.params.id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'User not found or already deleted' });
+    }
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// Unlock user account
+router.post('/users/:id/unlock', async (req, res) => {
+  try {
+    const result = await db.query(
+      userQueries.unlockUser,
+      [req.params.id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'User not found or already unlocked' });
+    }
+
+    res.json({ message: 'User unlocked successfully' });
+  } catch (error) {
+    console.error('Error unlocking user:', error);
+    res.status(500).json({ error: 'Failed to unlock user' });
+  }
+});
+
 // Get all transactions
 router.get('/transactions', async (req, res) => {
   try {

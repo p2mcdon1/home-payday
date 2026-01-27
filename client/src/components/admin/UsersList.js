@@ -43,6 +43,27 @@ function UsersList() {
     }
   };
 
+  const handleDelete = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) {
+      return;
+    }
+    try {
+      await api.delete(`/admin/users/${userId}`);
+      fetchUsers();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to delete user');
+    }
+  };
+
+  const handleUnlock = async (userId) => {
+    try {
+      await api.post(`/admin/users/${userId}/unlock`);
+      fetchUsers();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to unlock user');
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center">
@@ -127,6 +148,7 @@ function UsersList() {
                   <th>Name</th>
                   <th>Role</th>
                   <th>Created On</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,6 +158,25 @@ function UsersList() {
                     <td>{user.name}</td>
                     <td>{user.role}</td>
                     <td>{new Date(user.createdOn).toLocaleDateString()}</td>
+                    <td>
+                      <div className="d-flex gap-2">
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDelete(user.id)}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          variant="warning"
+                          size="sm"
+                          onClick={() => handleUnlock(user.id)}
+                          disabled={!user.lockedUntil}
+                        >
+                          Unlock
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

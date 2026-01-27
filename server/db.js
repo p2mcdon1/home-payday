@@ -2,6 +2,7 @@ const { Pool } = require('pg');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
+const userQueries = require('./db/queries/users');
 
 dotenv.config();
 
@@ -16,26 +17,26 @@ const pool = new Pool({
 // Initialize database schema
 async function init() {
   try {
-    // Read and execute schema file
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
+    // Read and execute users schema file
+    const usersSchemaPath = path.join(__dirname, 'db', 'users.sql');
+    const usersSchema = fs.readFileSync(usersSchemaPath, 'utf8');
     
-    await pool.query(schema);
-    console.log('Database schema initialized successfully');
+    await pool.query(usersSchema);
+    console.log('Users table schema initialized successfully');
     
     // Create default admin user if it doesn't exist
     const adminCheck = await pool.query(
-      'SELECT id FROM users WHERE email = $1',
-      ['admin@payday.com']
+      userQueries.checkUserExists,
+      ['admin']
     );
     
     if (adminCheck.rows.length === 0) {
       // Store password in plain text (as requested)
       await pool.query(
-        'INSERT INTO users (email, password_hash, role, name) VALUES ($1, $2, $3, $4)',
-        ['admin@payday.com', 'admin123', 'admin', 'Admin User']
+        userQueries.createUser,
+        ['admin', 'admin123', 'admin']
       );
-      console.log('Default admin user created (email: admin@payday.com, password: admin123)');
+      console.log('Default admin user created (name: admin, password: admin123)');
     }
   } catch (error) {
     console.error('Database initialization error:', error);

@@ -1,5 +1,6 @@
 const { expressjwt: jwt } = require('express-jwt');
 const db = require('../db');
+const userQueries = require('../db/queries/users');
 
 // JWT middleware - automatically extracts and verifies token
 const authenticateToken = jwt({
@@ -19,12 +20,12 @@ const loadUser = async (req, res, next) => {
 
     // Load user from database
     const result = await db.query(
-      'SELECT id, email, role, name FROM users WHERE id = $1',
+      userQueries.findUserById,
       [req.auth.userId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'User not found or account is disabled' });
     }
 
     req.user = result.rows[0];

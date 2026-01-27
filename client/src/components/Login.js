@@ -4,7 +4,7 @@ import api from '../utils/api';
 import { setCurrentUser } from '../utils/auth';
 
 function Login({ onLogin }) {
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +15,7 @@ function Login({ onLogin }) {
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', { name, password });
       const { token, user } = response.data;
       
       setCurrentUser(user);
@@ -38,13 +38,14 @@ function Login({ onLogin }) {
           
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label>Name</Form.Label>
               <Form.Control
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
-                placeholder="admin@payday.com"
+                placeholder="admin"
+                maxLength={100}
               />
             </Form.Group>
             
@@ -54,8 +55,8 @@ function Login({ onLogin }) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
                 placeholder="admin123"
+                maxLength={100}
               />
             </Form.Group>
             
@@ -65,7 +66,7 @@ function Login({ onLogin }) {
           </Form>
           
           <Alert variant="info" className="mt-3 mb-0 text-center">
-            <small>Default admin: admin@payday.com / admin123</small>
+            <small>Default admin: admin / admin123</small>
           </Alert>
         </Card.Body>
       </Card>

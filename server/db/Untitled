@@ -1,0 +1,68 @@
+# User Schema
+- Id - GUID
+- Name - string 100
+- Password string 100
+- CreatedOn - datetime
+- DeletedOn - datetime?
+- LockedUntil - datetime?
+- Avatar - blob?
+
+# Account Schema
+- Id - GUID
+- Name - string 100
+- OwnerUserId - GUID
+- CreatedOn - datetime
+- DeletedOn - datetime?
+- LockedOn - datetime?
+- Avatar - blob?
+- LastBalanceId - GUID?
+
+# Chore Schema
+- Id - GUID
+- Name - string 100
+- Description string max
+- Link - string 256
+- Avatar - blob
+- LifecycleId
+- RateId
+
+# Chore Lifecycle
+- Id - GUID
+- Infinite - bool
+- Daily - bool
+- DaysOfWeekMask - int?
+- MaxPerDay - int?
+- MaxPerHour - int?
+
+# Chore Rate
+- Id - GUID
+- Each - double?
+- Formula - string? 20
+- CreatedOn
+- LastModifiedOn
+
+# Effort
+- Id - GUID
+- ChoreId - GUID
+- LoggedBy - GUID
+- EffortedOn - datetime
+- ApprovedBy - GUID
+- CreatedOn - datetime
+- Completion - int
+- Notes - string? max
+- LastModfiedOn - datetime
+- BalancedAs - GUID?
+
+# Withdrawal
+- Id - GUID
+- AccountId - GUID
+- LoggedBy - GUID
+- CreatedOn - datetime
+- Description - string max
+- Amount - double
+
+# Balance
+- Id - GUID
+- AccountId - GUID
+- CalculatedOn - datetime
+- Amount - double

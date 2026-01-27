@@ -17,7 +17,7 @@ function AdminDashboard({ user, onLogout }) {
     <div>
       <Navbar bg="dark" variant="dark" expand="lg">
         <Container fluid>
-          <Navbar.Brand>Home Payday - Admin</Navbar.Brand>
+          <Navbar.Brand>927 Payroll - Admin</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">

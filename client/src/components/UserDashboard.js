@@ -45,11 +45,24 @@ function UserDashboard({ user, onLogout }) {
     );
   }
 
-  if (error) {
+  if (error && !profile) {
     return (
-      <Container className="mt-4">
-        <Alert variant="danger">Error: {error}</Alert>
-      </Container>
+      <div>
+        <Navbar bg="dark" variant="dark">
+          <Container fluid>
+            <Navbar.Brand>927 Payroll</Navbar.Brand>
+            <Navbar.Collapse className="justify-content-end">
+              <Nav>
+                <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
+                <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+              </Nav>
+            </Navbar.Collapse>
+          </Container>
+        </Navbar>
+        <Container className="mt-4">
+          <Alert variant="danger">Error: {error}</Alert>
+        </Container>
+      </div>
     );
   }
 
@@ -58,7 +71,7 @@ function UserDashboard({ user, onLogout }) {
       <div>
         <Navbar bg="dark" variant="dark">
           <Container fluid>
-            <Navbar.Brand>Home Payday</Navbar.Brand>
+            <Navbar.Brand>927 Payroll</Navbar.Brand>
             <Navbar.Collapse className="justify-content-end">
               <Nav>
                 <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
@@ -96,7 +109,7 @@ function UserDashboard({ user, onLogout }) {
     <div>
       <Navbar bg="dark" variant="dark">
         <Container fluid>
-          <Navbar.Brand>Home Payday</Navbar.Brand>
+          <Navbar.Brand>927 Payroll</Navbar.Brand>
           <Navbar.Collapse className="justify-content-end">
             <Nav>
               <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
@@ -107,6 +120,7 @@ function UserDashboard({ user, onLogout }) {
       </Navbar>
 
       <Container className="mt-4">
+        {error && <Alert variant="danger" className="mb-3">Error: {error}</Alert>}
         <Card className="mb-4 text-center">
           <Card.Body>
             <Card.Title className="text-muted mb-3">Current Balance</Card.Title>

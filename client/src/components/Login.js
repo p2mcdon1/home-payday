@@ -31,8 +31,7 @@ function Login({ onLogin }) {
     <Container fluid className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
       <Card className="shadow" style={{ width: '100%', maxWidth: '400px' }}>
         <Card.Body className="p-4">
-          <Card.Title as="h1" className="text-center mb-2">Home Payday</Card.Title>
-          <Card.Subtitle as="h2" className="text-center text-muted mb-4">Sign In</Card.Subtitle>
+          <Card.Title as="h1" className="text-center mb-2">927 Payroll</Card.Title>
           
           {error && <Alert variant="danger">{error}</Alert>}
           
@@ -44,7 +43,6 @@ function Login({ onLogin }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                placeholder="admin"
                 maxLength={100}
               />
             </Form.Group>
@@ -55,7 +53,6 @@ function Login({ onLogin }) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="admin123"
                 maxLength={100}
               />
             </Form.Group>
@@ -64,10 +61,6 @@ function Login({ onLogin }) {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </Form>
-          
-          <Alert variant="info" className="mt-3 mb-0 text-center">
-            <small>Default admin: admin / admin123</small>
-          </Alert>
         </Card.Body>
       </Card>
     </Container>

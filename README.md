@@ -1,4 +1,4 @@
-# Home Payday
+# 927 Payroll
 
 User earnings tracking application with admin and user interfaces.
 

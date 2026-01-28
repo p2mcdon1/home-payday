@@ -3,6 +3,7 @@ const db = require('../db');
 const accountQueries = require('../db/queries/accounts');
 const choreQueries = require('../db/queries/chores');
 const effortQueries = require('../db/queries/efforts');
+const balanceUtils = require('../utils/balance');
 
 const router = express.Router();
 
@@ -186,140 +187,7 @@ router.get('/pending-payments', async (req, res) => {
   }
 });
 
-// Update balance for a specific account (aggregate unbalanced payments/withdrawals)
-router.post('/accounts/:id/update-balance', async (req, res) => {
-  const accountId = req.params.id;
-
-  try {
-    // Verify account belongs to current user
-    const accountResult = await db.query(
-      accountQueries.getAccountById,
-      [accountId]
-    );
-
-    if (accountResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Account not found' });
-    }
-
-    if (accountResult.rows[0].ownedByUserId !== req.user.id) {
-      return res.status(403).json({ error: 'You do not have access to this account' });
-    }
-
-    const client = await db.pool.connect();
-
-    try {
-      await client.query('BEGIN');
-
-      // Get unbalanced payments for this account
-      const paymentsResult = await client.query(
-        `
-          SELECT "id", "amount"
-          FROM public.payments
-          WHERE "payedToAccountId" = $1
-            AND "appliedToBalanceId" IS NULL
-        `,
-        [accountId]
-      );
-
-      // Get unbalanced withdrawals for this account
-      const withdrawalsResult = await client.query(
-        `
-          SELECT "id", "amount"
-          FROM public.withdrawals
-          WHERE "accountId" = $1
-            AND "appliedToBalanceId" IS NULL
-        `,
-        [accountId]
-      );
-
-      if (paymentsResult.rows.length === 0 && withdrawalsResult.rows.length === 0) {
-        await client.query('ROLLBACK');
-        client.release();
-        return res.status(400).json({ error: 'No unbalanced payments or withdrawals for this account' });
-      }
-
-      // Aggregate net amount: payments positive, withdrawals negative
-      let netAmount = 0;
-
-      for (const row of paymentsResult.rows) {
-        netAmount += Number(row.amount) || 0;
-      }
-
-      for (const row of withdrawalsResult.rows) {
-        netAmount -= Number(row.amount) || 0;
-      }
-
-      // Create new balance record
-      const balanceResult = await client.query(
-        `
-          INSERT INTO public.balances ("accountId", "amount")
-          VALUES ($1, $2)
-          RETURNING "id", "accountId", "amount", "calculatedOn"
-        `,
-        [accountId, netAmount]
-      );
-
-      const balanceId = balanceResult.rows[0].id;
-
-      // Update account with new lastBalanceId
-      await client.query(
-        `
-          UPDATE public.accounts
-          SET "lastBalanceId" = $2
-          WHERE "id" = $1
-        `,
-        [accountId, balanceId]
-      );
-
-      // Mark payments as applied to this balance
-      await client.query(
-        `
-          UPDATE public.payments
-          SET "appliedToBalanceId" = $2
-          WHERE "payedToAccountId" = $1
-            AND "appliedToBalanceId" IS NULL
-        `,
-        [accountId, balanceId]
-      );
-
-      // Mark withdrawals as applied to this balance
-      await client.query(
-        `
-          UPDATE public.withdrawals
-          SET "appliedToBalanceId" = $2
-          WHERE "accountId" = $1
-            AND "appliedToBalanceId" IS NULL
-        `,
-        [accountId, balanceId]
-      );
-
-      await client.query('COMMIT');
-      client.release();
-
-      // Return updated account with new balance info
-      const updatedAccount = await db.query(
-        accountQueries.getAccountById,
-        [accountId]
-      );
-
-      res.json({
-        balance: balanceResult.rows[0],
-        account: updatedAccount.rows[0],
-      });
-    } catch (error) {
-      try {
-        await client.query('ROLLBACK');
-      } catch (rollbackError) {
-        console.error('Error during transaction rollback:', rollbackError);
-      }
-      client.release();
-      console.error('Error updating balance:', error);
-      res.status(500).json({ error: 'Failed to update balance' });
-    }
-  } catch (error) {
-    console.error('Error starting balance update:', error);
-    res.status(500).json({ error: 'Failed to update balance' });
-  }
-});
+// Note: Update balance endpoint removed - balances are now updated automatically
+// when admins approve efforts or when withdrawals are created
 
 module.exports = router;

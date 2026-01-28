@@ -6,6 +6,7 @@ const choreQueries = require('../db/queries/chores');
 const effortQueries = require('../db/queries/efforts');
 const accountQueries = require('../db/queries/accounts');
 const paymentQueries = require('../db/queries/payments');
+const balanceUtils = require('../utils/balance');
 
 const router = express.Router();
 
@@ -500,9 +501,19 @@ router.post('/efforts/:id/approve', async (req, res) => {
       [effortId, accountId, req.user.id, paymentAmount, null]
     );
 
+    // Update balance for the account (aggregate all unbalanced payments/withdrawals)
+    let balanceUpdate = null;
+    try {
+      balanceUpdate = await balanceUtils.updateAccountBalance(accountId);
+    } catch (balanceError) {
+      console.error('Error updating balance after payment creation:', balanceError);
+      // Don't fail the request if balance update fails - payment was created successfully
+    }
+
     res.json({
       effort: { id: effortId, approvedByUserId: req.user.id },
-      payment: paymentResult.rows[0]
+      payment: paymentResult.rows[0],
+      balance: balanceUpdate
     });
   } catch (error) {
     console.error('Error approving effort:', error);
@@ -531,6 +542,67 @@ router.post('/efforts/:id/deny', async (req, res) => {
   } catch (error) {
     console.error('Error denying effort:', error);
     res.status(500).json({ error: 'Failed to deny effort' });
+  }
+});
+
+// Update balances for all accounts of a user
+router.post('/users/:id/update-balances', async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Verify user exists
+    const userResult = await db.query(
+      userQueries.getUserById,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get all accounts for this user
+    const accountsResult = await db.query(
+      accountQueries.getAccountsByUserId,
+      [userId]
+    );
+
+    if (accountsResult.rows.length === 0) {
+      return res.status(400).json({ error: 'User has no accounts' });
+    }
+
+    const updatedBalances = [];
+    const errors = [];
+
+    // Update balance for each account
+    for (const account of accountsResult.rows) {
+      try {
+        const balance = await balanceUtils.updateAccountBalance(account.id);
+        if (balance) {
+          updatedBalances.push({
+            accountId: account.id,
+            accountName: account.name,
+            balance: balance
+          });
+        }
+      } catch (error) {
+        console.error(`Error updating balance for account ${account.id}:`, error);
+        errors.push({
+          accountId: account.id,
+          accountName: account.name,
+          error: error.message
+        });
+      }
+    }
+
+    res.json({
+      userId,
+      userName: userResult.rows[0].name,
+      updatedBalances,
+      errors: errors.length > 0 ? errors : undefined
+    });
+  } catch (error) {
+    console.error('Error updating balances:', error);
+    res.status(500).json({ error: 'Failed to update balances' });
   }
 });
 

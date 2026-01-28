@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Form, Table, Alert, Spinner } from 'react-bootstrap';
+import { Card, Button, Form, Table, Alert, Spinner, Toast, ToastContainer } from 'react-bootstrap';
 import api from '../../utils/api';
 
 function UsersList() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -64,6 +65,17 @@ function UsersList() {
     }
   };
 
+  const handleUpdateBalances = async (userId) => {
+    try {
+      const response = await api.post(`/admin/users/${userId}/update-balances`);
+      const updatedCount = response.data.updatedBalances?.length || 0;
+      setSuccess(`Updated balances for ${updatedCount} account(s).`);
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to update balances');
+    }
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center">
@@ -84,7 +96,32 @@ function UsersList() {
         </Button>
       </div>
 
-      {error && <Alert variant="danger">{error}</Alert>}
+      <ToastContainer position="top-end" className="p-3">
+        <Toast 
+          show={!!error} 
+          onClose={() => setError('')} 
+          bg="danger" 
+          autohide 
+          delay={5000}
+        >
+          <Toast.Header>
+            <strong className="me-auto">Error</strong>
+          </Toast.Header>
+          <Toast.Body className="text-white">{error}</Toast.Body>
+        </Toast>
+        <Toast 
+          show={!!success} 
+          onClose={() => setSuccess('')} 
+          bg="success" 
+          autohide 
+          delay={5000}
+        >
+          <Toast.Header>
+            <strong className="me-auto">Success</strong>
+          </Toast.Header>
+          <Toast.Body className="text-white">{success}</Toast.Body>
+        </Toast>
+      </ToastContainer>
 
       {showCreateForm && (
         <Card className="mb-4">
@@ -158,6 +195,13 @@ function UsersList() {
                     <td>{new Date(user.createdOn).toLocaleDateString()}</td>
                     <td>
                       <div className="d-flex gap-2">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleUpdateBalances(user.id)}
+                        >
+                          Update Balances
+                        </Button>
                         <Button
                           variant="danger"
                           size="sm"

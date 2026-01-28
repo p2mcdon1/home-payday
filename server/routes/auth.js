@@ -20,7 +20,7 @@ router.post('/register',
   [
     body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Name must be between 1 and 100 characters'),
     body('password').optional().isLength({ min: 1, max: 100 }),
-    body('role').optional().isIn(['admin', 'user']),
+    body('role').optional().isIn(['adult', 'kid']),
   ],
   async (req, res) => {
     try {
@@ -29,7 +29,7 @@ router.post('/register',
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { name, password, role = 'user' } = req.body;
+      const { name, password, role = 'kid' } = req.body;
 
       // Check if user exists
       const existingUser = await db.query(

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Navbar, Container, Card, Table, Spinner, Nav, Button, Form, Toast, ToastContainer } from 'react-bootstrap';
 import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import api from '../utils/api';
-import Chores from './user/Chores';
-import AccountTransactions from './user/AccountTransactions';
+import Chores from './kid/Chores';
+import AccountTransactions from './kid/AccountTransactions';
 
-function UserDashboard({ user, onLogout }) {
+function KidDashboard({ user, onLogout }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -21,8 +21,8 @@ function UserDashboard({ user, onLogout }) {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
-              <Nav.Link as={Link} to="/user/accounts">Accounts</Nav.Link>
-              <Nav.Link as={Link} to="/user/chores">Chores</Nav.Link>
+              <Nav.Link as={Link} to="/kid/accounts">Accounts</Nav.Link>
+              <Nav.Link as={Link} to="/kid/chores">Chores</Nav.Link>
             </Nav>
             <Nav>
               <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
@@ -37,14 +37,14 @@ function UserDashboard({ user, onLogout }) {
           <Route path="/accounts" element={<AccountsView />} />
           <Route path="/accounts/:id/transactions" element={<AccountTransactions />} />
           <Route path="/chores" element={<Chores />} />
-          <Route path="/" element={<Navigate to="/user/accounts" />} />
+          <Route path="/" element={<Navigate to="/kid/accounts" />} />
         </Routes>
       </Container>
     </div>
   );
 }
 
-// Accounts view component (extracted from original UserDashboard)
+// Accounts view component (extracted from original KidDashboard)
 function AccountsView() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +69,7 @@ function AccountsView() {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/user/accounts');
+      const response = await api.get('/kid/accounts');
       setAccounts(response.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load accounts');
@@ -81,7 +81,7 @@ function AccountsView() {
   const handleCreateAccount = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/user/accounts', { name: accountName });
+      await api.post('/kid/accounts', { name: accountName });
       setAccountName('');
       setShowCreateForm(false);
       fetchAccounts();
@@ -177,7 +177,7 @@ function AccountsView() {
                       </td>
                       <td>{new Date(account.createdOn).toLocaleDateString()}</td>
                       <td>
-                        <Link to={`/user/accounts/${account.id}/transactions`}>
+                        <Link to={`/kid/accounts/${account.id}/transactions`}>
                           <Button variant="primary" size="sm">
                             View Transactions
                           </Button>
@@ -194,4 +194,4 @@ function AccountsView() {
   );
 }
 
-export default UserDashboard;
+export default KidDashboard;

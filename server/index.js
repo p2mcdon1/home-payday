@@ -6,9 +6,9 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin');
-const userRoutes = require('./routes/user');
-const { authenticateToken, loadUser, requireAdmin, handleJWTError } = require('./middleware/auth');
+const adultRoutes = require('./routes/adult');
+const kidRoutes = require('./routes/kid');
+const { authenticateToken, loadUser, requireAdult, handleJWTError } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,8 +25,8 @@ app.use(handleJWTError);
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/admin', loadUser, requireAdmin, adminRoutes);
-app.use('/api/user', loadUser, userRoutes);
+app.use('/api/adult', loadUser, requireAdult, adultRoutes);
+app.use('/api/kid', loadUser, kidRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -1,20 +1,20 @@
 # 927 Payroll
 
-User earnings tracking application with admin and user interfaces.
+User earnings tracking application with adult and kid interfaces.
 
 ## Features
 
-- **Admin Interface:**
-  - Manage users (create, view, update)
-  - Add earnings to user accounts
-  - Deduct money from user accounts
+- **Adult Interface:**
+  - Manage kids (create, view, update)
+  - Add earnings to kid accounts
+  - Deduct money from kid accounts
   - Process payments
   - View all transactions
 
-- **User Interface:**
+- **Kid Interface:**
   - View current balance
   - View transaction history
-  - See user profile information
+  - See kid profile information
 
 ## Tech Stack
 
@@ -54,12 +54,12 @@ User earnings tracking application with admin and user interfaces.
    ```
    This will start both the backend server (port 3001) and frontend (port 3000).
 
-### Default Admin Account
+### Default Adult Account
 
-- **Name:** admin
-- **Password:** admin123
+- **Name:** adult
+- **Password:** adult123
 
-**Important:** Change the default admin password in production!
+**Important:** Change the default adult password in production!
 
 ## Project Structure
 
@@ -84,16 +84,16 @@ home-payday/
 - `POST /api/auth/register` - Register new user
 - `POST /api/auth/login` - Login
 
-### Admin Routes (require admin role)
-- `GET /api/admin/users` - Get all users
-- `POST /api/admin/users` - Create user
-- `GET /api/admin/users/:id` - Get user details
-- `GET /api/admin/transactions` - Get all transactions
+### Adult Routes (require adult role)
+- `GET /api/adult/kids` - Get all kids
+- `POST /api/adult/kids` - Create kid
+- `GET /api/adult/kids/:id` - Get kid details
+- `GET /api/adult/transactions` - Get all transactions
 
-### User Routes (require authentication)
-- `GET /api/user/profile` - Get user's profile
-- `GET /api/user/balance` - Get current balance
-- `GET /api/user/transactions` - Get transaction history
+### Kid Routes (require authentication)
+- `GET /api/kid/profile` - Get kid's profile
+- `GET /api/kid/balance` - Get current balance
+- `GET /api/kid/transactions` - Get transaction history
 
 ## Database Schema
 

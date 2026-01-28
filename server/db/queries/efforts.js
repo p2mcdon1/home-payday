@@ -39,8 +39,8 @@ module.exports = {
     ORDER BY e."effortedOn" DESC
   `,
 
-  // Get pending efforts for admin (efforts without payments and not denied)
-  getPendingEffortsForAdmin: `
+  // Get pending efforts for adult (efforts without payments and not denied)
+  getPendingEffortsForAdult: `
     SELECT 
       e."id",
       e."choreId",

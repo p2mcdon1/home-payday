@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/Login';
-import AdminDashboard from './components/AdminDashboard';
-import UserDashboard from './components/UserDashboard';
+import AdultDashboard from './components/AdultDashboard';
+import KidDashboard from './components/KidDashboard';
 import { getAuthToken, setAuthToken, removeAuthToken, getCurrentUser, setCurrentUser } from './utils/auth';
 
 function App() {
@@ -43,33 +43,33 @@ function App() {
           path="/login"
           element={
             user ? (
-              <Navigate to={user.role === 'admin' ? '/admin' : '/user'} />
+              <Navigate to={user.role === 'adult' ? '/adult' : '/kid'} />
             ) : (
               <Login onLogin={handleLogin} />
             )
           }
         />
         <Route
-          path="/admin/*"
+          path="/adult/*"
           element={
-            user && user.role === 'admin' ? (
-              <AdminDashboard user={user} onLogout={handleLogout} />
+            user && user.role === 'adult' ? (
+              <AdultDashboard user={user} onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
             )
           }
         />
         <Route
-          path="/user/*"
+          path="/kid/*"
           element={
             user ? (
-              <UserDashboard user={user} onLogout={handleLogout} />
+              <KidDashboard user={user} onLogout={handleLogout} />
             ) : (
               <Navigate to="/login" />
             )
           }
         />
-        <Route path="/" element={<Navigate to={user ? (user.role === 'admin' ? '/admin' : '/user') : '/login'} />} />
+        <Route path="/" element={<Navigate to={user ? (user.role === 'adult' ? '/adult' : '/kid') : '/login'} />} />
       </Routes>
     </Router>
   );

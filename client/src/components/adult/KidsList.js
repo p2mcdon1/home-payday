@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Button, Form, Table, Alert, Spinner, Toast, ToastContainer } from 'react-bootstrap';
 import api from '../../utils/api';
 
-function UsersList() {
+function KidsList() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -87,7 +87,7 @@ function UsersList() {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Users</h2>
+        <h2>Kids</h2>
         <Button
           variant={showCreateForm ? 'secondary' : 'success'}
           onClick={() => setShowCreateForm(!showCreateForm)}
@@ -164,7 +164,7 @@ function UsersList() {
                 />
               </Form.Group>
               <Button type="submit" variant="primary">
-                Create User
+                Create Kid
               </Button>
             </Form>
           </Card.Body>
@@ -230,4 +230,4 @@ function UsersList() {
   );
 }
 
-export default UsersList;
+export default KidsList;

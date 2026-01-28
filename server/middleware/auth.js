@@ -44,10 +44,10 @@ const handleJWTError = (err, req, res, next) => {
   next(err);
 };
 
-// Require admin role
-const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
+// Require adult role
+const requireAdult = (req, res, next) => {
+  if (!req.user || req.user.role !== 'adult') {
+    return res.status(403).json({ error: 'Adult access required' });
   }
   next();
 };
@@ -55,6 +55,6 @@ const requireAdmin = (req, res, next) => {
 module.exports = {
   authenticateToken,
   loadUser,
-  requireAdmin,
+  requireAdult,
   handleJWTError,
 };

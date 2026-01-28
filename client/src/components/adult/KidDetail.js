@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Card, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import api from '../../utils/api';
 
-function UserDetail() {
+function KidDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -74,7 +74,7 @@ function UserDetail() {
 
       <Card>
         <Card.Body>
-          <Card.Title className="mb-4">User Details</Card.Title>
+          <Card.Title className="mb-4">Kid Details</Card.Title>
           <div className="mb-4 pb-3 border-bottom">
             <p className="mb-2"><strong>Name:</strong> {user.name}</p>
             <p className="mb-2"><strong>Role:</strong> {user.role}</p>
@@ -174,4 +174,4 @@ function UserDetail() {
   );
 }
 
-export default UserDetail;
+export default KidDetail;

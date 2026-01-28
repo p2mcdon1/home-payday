@@ -219,6 +219,6 @@ router.get('/accounts/:id/transactions', async (req, res) => {
 });
 
 // Note: Update balance endpoint removed - balances are now updated automatically
-// when admins approve efforts or when withdrawals are created
+// when adults approve efforts or when withdrawals are created
 
 module.exports = router;

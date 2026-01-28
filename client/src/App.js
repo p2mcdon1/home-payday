@@ -27,6 +27,9 @@ function App() {
   const handleLogout = () => {
     removeAuthToken();
     setUser(null);
+    // Clear login form data from sessionStorage
+    sessionStorage.removeItem('loginUsername');
+    sessionStorage.removeItem('loginError');
   };
 
   if (loading) {

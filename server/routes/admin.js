@@ -3,6 +3,9 @@ const { body, validationResult } = require('express-validator');
 const db = require('../db');
 const userQueries = require('../db/queries/users');
 const choreQueries = require('../db/queries/chores');
+const effortQueries = require('../db/queries/efforts');
+const accountQueries = require('../db/queries/accounts');
+const paymentQueries = require('../db/queries/payments');
 
 const router = express.Router();
 
@@ -415,6 +418,119 @@ router.delete('/rates/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting rate:', error);
     res.status(500).json({ error: 'Failed to delete rate' });
+  }
+});
+
+// Get pending efforts for admin approval
+router.get('/pending-efforts', async (req, res) => {
+  try {
+    const result = await db.query(effortQueries.getPendingEffortsForAdmin);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching pending efforts:', error);
+    res.status(500).json({ error: 'Failed to fetch pending efforts' });
+  }
+});
+
+// Approve effort and create payment
+router.post('/efforts/:id/approve', async (req, res) => {
+  try {
+    const effortId = req.params.id;
+    
+    // Start transaction by getting effort details
+    const effortResult = await db.query(
+      `SELECT "id", "choreId", "loggedByUserId", "accountId" 
+       FROM public.efforts 
+       WHERE "id" = $1 AND "approvedByUserId" IS NULL AND "deniedByUserId" IS NULL`,
+      [effortId]
+    );
+
+    if (effortResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Effort not found or already processed' });
+    }
+
+    const effort = effortResult.rows[0];
+
+    // Get chore rate to calculate payment amount
+    const choreResult = await db.query(
+      `SELECT cr."each", cr."formula" 
+       FROM public.chores c
+       JOIN public.choreRates cr ON c."rateId" = cr."id"
+       WHERE c."id" = $1`,
+      [effort.choreId]
+    );
+
+    if (choreResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Chore not found' });
+    }
+
+    const rate = choreResult.rows[0];
+    
+    // Determine payment amount
+    let paymentAmount = 0;
+    if (rate.each) {
+      paymentAmount = parseFloat(rate.each);
+    } else if (rate.formula) {
+      // For now, if there's a formula, we'll set amount to 0
+      // In a real system, you'd evaluate the formula
+      paymentAmount = 0;
+    }
+
+    // Determine account - use effort's accountId or get oldest account for user
+    let accountId = effort.accountId;
+    if (!accountId) {
+      const oldestAccountResult = await db.query(
+        accountQueries.getOldestAccountByUserId,
+        [effort.loggedByUserId]
+      );
+      
+      if (oldestAccountResult.rows.length === 0) {
+        return res.status(400).json({ error: 'User has no accounts to receive payment' });
+      }
+      
+      accountId = oldestAccountResult.rows[0].id;
+    }
+
+    // Approve the effort
+    await db.query(effortQueries.approveEffort, [effortId, req.user.id]);
+
+    // Create payment
+    const paymentResult = await db.query(
+      paymentQueries.createPayment,
+      [effortId, accountId, req.user.id, paymentAmount, null]
+    );
+
+    res.json({
+      effort: { id: effortId, approvedByUserId: req.user.id },
+      payment: paymentResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Error approving effort:', error);
+    res.status(500).json({ error: 'Failed to approve effort' });
+  }
+});
+
+// Deny effort
+router.post('/efforts/:id/deny', async (req, res) => {
+  try {
+    const effortId = req.params.id;
+    
+    const effortResult = await db.query(
+      `SELECT "id" FROM public.efforts 
+       WHERE "id" = $1 AND "approvedByUserId" IS NULL AND "deniedByUserId" IS NULL`,
+      [effortId]
+    );
+
+    if (effortResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Effort not found or already processed' });
+    }
+
+    const result = await db.query(effortQueries.denyEffort, [effortId, req.user.id]);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error denying effort:', error);
+    res.status(500).json({ error: 'Failed to deny effort' });
   }
 });
 

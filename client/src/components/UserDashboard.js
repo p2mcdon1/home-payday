@@ -47,6 +47,7 @@ function AccountsView() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [accountName, setAccountName] = useState('');
 
@@ -63,6 +64,16 @@ function AccountsView() {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  // Auto-dismiss success toast after 5 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const fetchAccounts = async () => {
     try {
@@ -85,6 +96,16 @@ function AccountsView() {
       fetchAccounts();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create account');
+    }
+  };
+
+  const handleUpdateBalance = async (accountId) => {
+    try {
+      await api.post(`/user/accounts/${accountId}/update-balance`);
+      setSuccess('Balance updated successfully.');
+      fetchAccounts();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to update balance');
     }
   };
 
@@ -111,6 +132,18 @@ function AccountsView() {
             <strong className="me-auto">Error</strong>
           </Toast.Header>
           <Toast.Body className="text-white">{error}</Toast.Body>
+        </Toast>
+        <Toast 
+          show={!!success} 
+          onClose={() => setSuccess('')} 
+          bg="success" 
+          autohide 
+          delay={5000}
+        >
+          <Toast.Header>
+            <strong className="me-auto">Success</strong>
+          </Toast.Header>
+          <Toast.Body className="text-white">{success}</Toast.Body>
         </Toast>
       </ToastContainer>
       
@@ -159,21 +192,32 @@ function AccountsView() {
           <Card.Body>
             <Table striped bordered hover responsive>
               <thead>
-                <tr>
-                  <th>Account Name</th>
-                  <th>Balance</th>
-                  <th>Created On</th>
-                </tr>
+                  <tr>
+                    <th>Account Name</th>
+                    <th>Balance</th>
+                    <th>Created On</th>
+                    <th>Actions</th>
+                  </tr>
               </thead>
               <tbody>
                 {accounts.map((account) => (
-                  <tr key={account.id}>
-                    <td>{account.name}</td>
-                    <td className="fw-bold">
-                      ${parseFloat(account.balance || 0).toFixed(2)}
-                    </td>
-                    <td>{new Date(account.createdOn).toLocaleDateString()}</td>
-                  </tr>
+                    <tr key={account.id}>
+                      <td>{account.name}</td>
+                      <td className="fw-bold">
+                        ${parseFloat(account.balance || 0).toFixed(2)}
+                      </td>
+                      <td>{new Date(account.createdOn).toLocaleDateString()}</td>
+                      <td>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          disabled={!account.hasUnbalancedActivity}
+                          onClick={() => handleUpdateBalance(account.id)}
+                        >
+                          Update Balance
+                        </Button>
+                      </td>
+                    </tr>
                 ))}
               </tbody>
             </Table>

@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const db = require('../db');
 const userQueries = require('../db/queries/users');
+const choreQueries = require('../db/queries/chores');
 
 const router = express.Router();
 
@@ -121,34 +122,299 @@ router.post('/users/:id/unlock', async (req, res) => {
   }
 });
 
-// Get all transactions
-router.get('/transactions', async (req, res) => {
+// ===== CHORES ENDPOINTS =====
+
+// Get all chores
+router.get('/chores', async (req, res) => {
   try {
-    const { userId, limit = 100, offset = 0 } = req.query;
-    
-    let query = `
-      SELECT t."id", t."amount", t."transactionType", t."description", t."createdAt",
-             u."id" as "userId", u."name" as "userName",
-             creator."name" as "createdByName"
-      FROM public.transactions t
-      JOIN public.users u ON t."userId" = u."id"
-      LEFT JOIN public.users creator ON t."createdBy" = creator."id"
-    `;
-    
-    const params = [];
-    if (userId) {
-      query += ' WHERE t."userId" = $1';
-      params.push(userId);
-    }
-    
-    query += ' ORDER BY t."createdAt" DESC LIMIT $' + (params.length + 1) + ' OFFSET $' + (params.length + 2);
-    params.push(parseInt(limit), parseInt(offset));
-    
-    const result = await db.query(query, params);
+    const result = await db.query(choreQueries.getAllChores);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching transactions:', error);
-    res.status(500).json({ error: 'Failed to fetch transactions' });
+    console.error('Error fetching chores:', error);
+    res.status(500).json({ error: 'Failed to fetch chores' });
+  }
+});
+
+// Get chore by ID
+router.get('/chores/:id', async (req, res) => {
+  try {
+    const result = await db.query(choreQueries.getChoreById, [req.params.id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Chore not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching chore:', error);
+    res.status(500).json({ error: 'Failed to fetch chore' });
+  }
+});
+
+// Create chore
+router.post('/chores',
+  [
+    body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Name must be between 1 and 100 characters'),
+    body('lifecycleId').isUUID().withMessage('Valid lifecycleId is required'),
+    body('rateId').isUUID().withMessage('Valid rateId is required'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { name, description, link, enabled, lifecycleId, rateId } = req.body;
+      const result = await db.query(
+        choreQueries.createChore,
+        [name.trim(), description || null, link || null, enabled !== undefined ? enabled : true, lifecycleId, rateId]
+      );
+
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('Error creating chore:', error);
+      res.status(500).json({ error: 'Failed to create chore' });
+    }
+  }
+);
+
+// Update chore
+router.put('/chores/:id',
+  [
+    body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Name must be between 1 and 100 characters'),
+    body('lifecycleId').isUUID().withMessage('Valid lifecycleId is required'),
+    body('rateId').isUUID().withMessage('Valid rateId is required'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { name, description, link, enabled, lifecycleId, rateId } = req.body;
+      const result = await db.query(
+        choreQueries.updateChore,
+        [req.params.id, name.trim(), description || null, link || null, enabled !== undefined ? enabled : true, lifecycleId, rateId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Chore not found' });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error updating chore:', error);
+      res.status(500).json({ error: 'Failed to update chore' });
+    }
+  }
+);
+
+// Delete chore
+router.delete('/chores/:id', async (req, res) => {
+  try {
+    const result = await db.query(choreQueries.deleteChore, [req.params.id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Chore not found' });
+    }
+    res.json({ message: 'Chore deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting chore:', error);
+    res.status(500).json({ error: 'Failed to delete chore' });
+  }
+});
+
+// ===== LIFECYCLES ENDPOINTS =====
+
+// Get all lifecycles
+router.get('/lifecycles', async (req, res) => {
+  try {
+    const result = await db.query(choreQueries.getAllLifecycles);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching lifecycles:', error);
+    res.status(500).json({ error: 'Failed to fetch lifecycles' });
+  }
+});
+
+// Get lifecycle by ID
+router.get('/lifecycles/:id', async (req, res) => {
+  try {
+    const result = await db.query(choreQueries.getLifecycleById, [req.params.id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Lifecycle not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching lifecycle:', error);
+    res.status(500).json({ error: 'Failed to fetch lifecycle' });
+  }
+});
+
+// Create lifecycle
+router.post('/lifecycles',
+  [
+    body('infinite').isBoolean().withMessage('infinite must be a boolean'),
+    body('daily').isBoolean().withMessage('daily must be a boolean'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { infinite, daily, daysOfWeekMask, maxPerDay, maxPerHour } = req.body;
+      const result = await db.query(
+        choreQueries.createLifecycle,
+        [
+          infinite || false,
+          daily || false,
+          daysOfWeekMask || null,
+          maxPerDay || null,
+          maxPerHour || null
+        ]
+      );
+
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('Error creating lifecycle:', error);
+      res.status(500).json({ error: 'Failed to create lifecycle' });
+    }
+  }
+);
+
+// Update lifecycle
+router.put('/lifecycles/:id',
+  [
+    body('infinite').isBoolean().withMessage('infinite must be a boolean'),
+    body('daily').isBoolean().withMessage('daily must be a boolean'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { infinite, daily, daysOfWeekMask, maxPerDay, maxPerHour } = req.body;
+      const result = await db.query(
+        choreQueries.updateLifecycle,
+        [
+          req.params.id,
+          infinite || false,
+          daily || false,
+          daysOfWeekMask || null,
+          maxPerDay || null,
+          maxPerHour || null
+        ]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Lifecycle not found' });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error updating lifecycle:', error);
+      res.status(500).json({ error: 'Failed to update lifecycle' });
+    }
+  }
+);
+
+// Delete lifecycle
+router.delete('/lifecycles/:id', async (req, res) => {
+  try {
+    const result = await db.query(choreQueries.deleteLifecycle, [req.params.id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Lifecycle not found' });
+    }
+    res.json({ message: 'Lifecycle deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting lifecycle:', error);
+    res.status(500).json({ error: 'Failed to delete lifecycle' });
+  }
+});
+
+// ===== RATES ENDPOINTS =====
+
+// Get all rates
+router.get('/rates', async (req, res) => {
+  try {
+    const result = await db.query(choreQueries.getAllRates);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching rates:', error);
+    res.status(500).json({ error: 'Failed to fetch rates' });
+  }
+});
+
+// Get rate by ID
+router.get('/rates/:id', async (req, res) => {
+  try {
+    const result = await db.query(choreQueries.getRateById, [req.params.id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Rate not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching rate:', error);
+    res.status(500).json({ error: 'Failed to fetch rate' });
+  }
+});
+
+// Create rate
+router.post('/rates',
+  [],
+  async (req, res) => {
+    try {
+      const { each, formula } = req.body;
+      const result = await db.query(
+        choreQueries.createRate,
+        [each || null, formula || null]
+      );
+
+      res.status(201).json(result.rows[0]);
+    } catch (error) {
+      console.error('Error creating rate:', error);
+      res.status(500).json({ error: 'Failed to create rate' });
+    }
+  }
+);
+
+// Update rate
+router.put('/rates/:id',
+  [],
+  async (req, res) => {
+    try {
+      const { each, formula } = req.body;
+      const result = await db.query(
+        choreQueries.updateRate,
+        [req.params.id, each || null, formula || null]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Rate not found' });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error updating rate:', error);
+      res.status(500).json({ error: 'Failed to update rate' });
+    }
+  }
+);
+
+// Delete rate
+router.delete('/rates/:id', async (req, res) => {
+  try {
+    const result = await db.query(choreQueries.deleteRate, [req.params.id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Rate not found' });
+    }
+    res.json({ message: 'Rate deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting rate:', error);
+    res.status(500).json({ error: 'Failed to delete rate' });
   }
 });
 

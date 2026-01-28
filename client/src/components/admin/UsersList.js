@@ -144,7 +144,6 @@ function UsersList() {
             <Table striped bordered hover responsive>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Name</th>
                   <th>Role</th>
                   <th>Created On</th>
@@ -154,7 +153,6 @@ function UsersList() {
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id}>
-                    <td>{user.id}</td>
                     <td>{user.name}</td>
                     <td>{user.role}</td>
                     <td>{new Date(user.createdOn).toLocaleDateString()}</td>

@@ -76,7 +76,6 @@ function UserDetail() {
         <Card.Body>
           <Card.Title className="mb-4">User Details</Card.Title>
           <div className="mb-4 pb-3 border-bottom">
-            <p className="mb-2"><strong>User ID:</strong> {user.id}</p>
             <p className="mb-2"><strong>Name:</strong> {user.name}</p>
             <p className="mb-2"><strong>Role:</strong> {user.role}</p>
             {user.currentBalance !== undefined && (

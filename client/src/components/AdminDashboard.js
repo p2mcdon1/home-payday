@@ -3,7 +3,7 @@ import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 import UsersList from './admin/UsersList';
 import UserDetail from './admin/UserDetail';
-import TransactionsList from './admin/TransactionsList';
+import Chores from './admin/Chores';
 
 function AdminDashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ function AdminDashboard({ user, onLogout }) {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
               <Nav.Link as={Link} to="/admin/users">Users</Nav.Link>
-              <Nav.Link as={Link} to="/admin/transactions">Transactions</Nav.Link>
+              <Nav.Link as={Link} to="/admin/chores">Chores</Nav.Link>
             </Nav>
             <Nav>
               <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
@@ -36,7 +36,7 @@ function AdminDashboard({ user, onLogout }) {
         <Routes>
           <Route path="/users" element={<UsersList />} />
           <Route path="/users/:id" element={<UserDetail />} />
-          <Route path="/transactions" element={<TransactionsList />} />
+          <Route path="/chores" element={<Chores />} />
           <Route path="/" element={<Navigate to="/admin/users" />} />
         </Routes>
       </Container>

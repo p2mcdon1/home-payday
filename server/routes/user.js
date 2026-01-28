@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 const accountQueries = require('../db/queries/accounts');
 const choreQueries = require('../db/queries/chores');
+const effortQueries = require('../db/queries/efforts');
 
 const router = express.Router();
 
@@ -124,6 +125,64 @@ router.get('/chores', async (req, res) => {
   } catch (error) {
     console.error('Error fetching available chores:', error);
     res.status(500).json({ error: 'Failed to fetch available chores' });
+  }
+});
+
+// Log effort/work for current user
+router.post('/efforts', async (req, res) => {
+  try {
+    const { choreId, completion = 100, notes, accountId, effortedOn } = req.body;
+
+    if (!choreId) {
+      return res.status(400).json({ error: 'Chore ID is required' });
+    }
+
+    if (completion < 0 || completion > 100) {
+      return res.status(400).json({ error: 'Completion must be between 0 and 100' });
+    }
+
+    // Validate accountId belongs to user if provided
+    if (accountId) {
+      const accountCheck = await db.query(
+        accountQueries.getAccountById,
+        [accountId]
+      );
+      if (accountCheck.rows.length === 0 || accountCheck.rows[0].ownedByUserId !== req.user.id) {
+        return res.status(400).json({ error: 'Invalid account ID' });
+      }
+    }
+
+    const result = await db.query(
+      effortQueries.createEffort,
+      [
+        choreId,
+        req.user.id,
+        effortedOn || new Date(),
+        completion,
+        notes || null,
+        accountId || null
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating effort:', error);
+    res.status(500).json({ error: 'Failed to create effort' });
+  }
+});
+
+// Get pending payments for current user
+router.get('/pending-payments', async (req, res) => {
+  try {
+    const result = await db.query(
+      effortQueries.getPendingPayments,
+      [req.user.id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching pending payments:', error);
+    res.status(500).json({ error: 'Failed to fetch pending payments' });
   }
 });
 

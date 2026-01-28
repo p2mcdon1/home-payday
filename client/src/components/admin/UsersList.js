@@ -96,7 +96,7 @@ function UsersList() {
         </Button>
       </div>
 
-      <ToastContainer position="top-end" className="p-3">
+      <ToastContainer position="bottom-center" className="p-3">
         <Toast 
           show={!!error} 
           onClose={() => setError('')} 

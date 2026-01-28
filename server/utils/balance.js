@@ -26,6 +26,27 @@ async function updateAccountBalance(accountId, client = null) {
       await client.query('BEGIN');
     }
 
+    // Get current account balance from lastBalanceId
+    const accountResult = await client.query(
+      `
+        SELECT a."lastBalanceId", COALESCE(b."amount", 0) as "currentBalance"
+        FROM public.accounts a
+        LEFT JOIN public.balances b ON a."lastBalanceId" = b."id"
+        WHERE a."id" = $1
+      `,
+      [accountId]
+    );
+
+    if (accountResult.rows.length === 0) {
+      if (!useExternalClient) {
+        await client.query('ROLLBACK');
+        client.release();
+      }
+      throw new Error('Account not found');
+    }
+
+    const currentBalance = Number(accountResult.rows[0].currentBalance) || 0;
+
     // Get unbalanced payments for this account
     const paymentsResult = await client.query(
       `
@@ -57,16 +78,18 @@ async function updateAccountBalance(accountId, client = null) {
       return null;
     }
 
-    // Aggregate net amount: payments positive, withdrawals negative
-    let netAmount = 0;
+    // Calculate new balance: current balance + sum of payments - sum of withdrawals
+    let pendingAmount = 0;
 
     for (const row of paymentsResult.rows) {
-      netAmount += Number(row.amount) || 0;
+      pendingAmount += Number(row.amount) || 0;
     }
 
     for (const row of withdrawalsResult.rows) {
-      netAmount -= Number(row.amount) || 0;
+      pendingAmount -= Number(row.amount) || 0;
     }
+
+    const netAmount = currentBalance + pendingAmount;
 
     // Create new balance record
     const balanceResult = await client.query(

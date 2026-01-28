@@ -99,7 +99,7 @@ function AccountsView() {
   return (
     <div>
       <h2 className="mb-4">My Accounts</h2>
-      <ToastContainer position="top-end" className="p-3">
+      <ToastContainer position="bottom-center" className="p-3">
         <Toast 
           show={!!error} 
           onClose={() => setError('')} 

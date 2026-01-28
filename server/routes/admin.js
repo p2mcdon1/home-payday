@@ -6,6 +6,7 @@ const choreQueries = require('../db/queries/chores');
 const effortQueries = require('../db/queries/efforts');
 const accountQueries = require('../db/queries/accounts');
 const paymentQueries = require('../db/queries/payments');
+const withdrawalQueries = require('../db/queries/withdrawals');
 const balanceUtils = require('../utils/balance');
 
 const router = express.Router();
@@ -39,6 +40,21 @@ router.get('/users/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Failed to fetch user' });
+  }
+});
+
+// Get accounts for a user (admin only)
+router.get('/users/:id/accounts', async (req, res) => {
+  try {
+    const result = await db.query(
+      accountQueries.getAccountsByUserId,
+      [req.params.id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching user accounts:', error);
+    res.status(500).json({ error: 'Failed to fetch user accounts' });
   }
 });
 
@@ -605,5 +621,56 @@ router.post('/users/:id/update-balances', async (req, res) => {
     res.status(500).json({ error: 'Failed to update balances' });
   }
 });
+
+// Create withdrawal
+router.post('/withdrawals',
+  [
+    body('accountId').isUUID().withMessage('Valid account ID is required'),
+    body('amount').isFloat({ min: 0.01 }).withMessage('Amount must be a positive number'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { accountId, amount, notes } = req.body;
+
+      // Verify account exists
+      const accountResult = await db.query(
+        accountQueries.getAccountById,
+        [accountId]
+      );
+
+      if (accountResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Account not found' });
+      }
+
+      // Create withdrawal
+      const withdrawalResult = await db.query(
+        withdrawalQueries.createWithdrawal,
+        [accountId, req.user.id, parseFloat(amount), notes || null]
+      );
+
+      // Update balance for the account (aggregate all unbalanced payments/withdrawals)
+      let balanceUpdate = null;
+      try {
+        balanceUpdate = await balanceUtils.updateAccountBalance(accountId);
+      } catch (balanceError) {
+        console.error('Error updating balance after withdrawal creation:', balanceError);
+        // Don't fail the request if balance update fails - withdrawal was created successfully
+      }
+
+      res.status(201).json({
+        withdrawal: withdrawalResult.rows[0],
+        balance: balanceUpdate
+      });
+    } catch (error) {
+      console.error('Error creating withdrawal:', error);
+      res.status(500).json({ error: 'Failed to create withdrawal' });
+    }
+  }
+);
 
 module.exports = router;

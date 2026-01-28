@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Tab, Card, Table, Button, Spinner, Toast, ToastContainer, Badge } from 'react-bootstrap';
+import { Tabs, Tab, Card, Table, Button, Spinner, Toast, ToastContainer, Badge, Modal, Form } from 'react-bootstrap';
 import api from '../../utils/api';
 
 function Service() {
@@ -8,12 +8,36 @@ function Service() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [withdrawalData, setWithdrawalData] = useState({
+    userId: '',
+    accountId: '',
+    amount: '',
+    notes: ''
+  });
 
   useEffect(() => {
     if (activeTab === 'pending-payments') {
       fetchPendingEfforts();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (showWithdrawalModal) {
+      fetchUsers();
+    }
+  }, [showWithdrawalModal]);
+
+  useEffect(() => {
+    if (withdrawalData.userId) {
+      fetchAccountsForUser(withdrawalData.userId);
+    } else {
+      setAccounts([]);
+      setWithdrawalData(prev => ({ ...prev, accountId: '' }));
+    }
+  }, [withdrawalData.userId]);
 
   // Auto-dismiss error toast after 5 seconds
   useEffect(() => {
@@ -45,6 +69,66 @@ function Service() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get('/admin/users');
+      setUsers(response.data);
+    } catch (err) {
+      console.error('Failed to load users:', err);
+    }
+  };
+
+  const fetchAccountsForUser = async (userId) => {
+    try {
+      const response = await api.get(`/admin/users/${userId}/accounts`);
+      setAccounts(response.data);
+    } catch (err) {
+      console.error('Failed to load accounts:', err);
+      setAccounts([]);
+    }
+  };
+
+  const handleWithdrawalClick = () => {
+    setShowWithdrawalModal(true);
+    setWithdrawalData({
+      userId: '',
+      accountId: '',
+      amount: '',
+      notes: ''
+    });
+  };
+
+  const handleWithdrawalSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/admin/withdrawals', {
+        accountId: withdrawalData.accountId,
+        amount: parseFloat(withdrawalData.amount),
+        notes: withdrawalData.notes || null
+      });
+      setSuccess('Withdrawal created and balance updated successfully!');
+      setShowWithdrawalModal(false);
+      setWithdrawalData({
+        userId: '',
+        accountId: '',
+        amount: '',
+        notes: ''
+      });
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'Failed to create withdrawal');
+    }
+  };
+
+  const handleWithdrawalCancel = () => {
+    setShowWithdrawalModal(false);
+    setWithdrawalData({
+      userId: '',
+      accountId: '',
+      amount: '',
+      notes: ''
+    });
   };
 
   const handleApprove = async (effortId) => {
@@ -89,8 +173,13 @@ function Service() {
 
   return (
     <div>
-      <h2 className="mb-4">Service</h2>
-      <ToastContainer position="top-end" className="p-3">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Service</h2>
+        <Button variant="primary" onClick={handleWithdrawalClick}>
+          Withdrawal
+        </Button>
+      </div>
+      <ToastContainer position="bottom-center" className="p-3">
         <Toast 
           show={!!error} 
           onClose={() => setError('')} 
@@ -186,6 +275,88 @@ function Service() {
           )}
         </Tab>
       </Tabs>
+
+      {/* Withdrawal Modal */}
+      <Modal show={showWithdrawalModal} onHide={handleWithdrawalCancel} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Create Withdrawal</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleWithdrawalSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>User *</Form.Label>
+              <Form.Select
+                value={withdrawalData.userId}
+                onChange={(e) => setWithdrawalData({ ...withdrawalData, userId: e.target.value, accountId: '' })}
+                required
+              >
+                <option value="">Select a user</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} ({user.role})
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Account *</Form.Label>
+              <Form.Select
+                value={withdrawalData.accountId}
+                onChange={(e) => setWithdrawalData({ ...withdrawalData, accountId: e.target.value })}
+                required
+                disabled={!withdrawalData.userId || accounts.length === 0}
+              >
+                <option value="">
+                  {!withdrawalData.userId 
+                    ? 'Select a user first' 
+                    : accounts.length === 0 
+                    ? 'No accounts available' 
+                    : 'Select an account'}
+                </option>
+                {accounts.map(account => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} (Balance: ${parseFloat(account.balance || 0).toFixed(2)})
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Amount *</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={withdrawalData.amount}
+                onChange={(e) => setWithdrawalData({ ...withdrawalData, amount: e.target.value })}
+                placeholder="Enter withdrawal amount"
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Notes</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={withdrawalData.notes}
+                onChange={(e) => setWithdrawalData({ ...withdrawalData, notes: e.target.value })}
+                placeholder="Optional notes about this withdrawal"
+              />
+            </Form.Group>
+
+            <div className="d-flex justify-content-end gap-2">
+              <Button variant="secondary" onClick={handleWithdrawalCancel}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit" disabled={!withdrawalData.accountId || !withdrawalData.amount}>
+                Submit
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }

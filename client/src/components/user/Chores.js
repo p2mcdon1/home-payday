@@ -158,7 +158,7 @@ function Chores() {
   return (
     <div>
       <h2 className="mb-4">Available Chores</h2>
-      <ToastContainer position="top-end" className="p-3">
+      <ToastContainer position="bottom-center" className="p-3">
         <Toast 
           show={!!error} 
           onClose={() => setError('')} 

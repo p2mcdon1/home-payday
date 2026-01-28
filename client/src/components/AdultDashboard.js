@@ -1,17 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 import KidsList from './adult/KidsList';
 import KidDetail from './adult/KidDetail';
 import Chores from './adult/Chores';
 import Service from './adult/Service';
+import UserMenu from './common/UserMenu';
+import { setCurrentUser } from '../utils/auth';
 
 function AdultDashboard({ user, onLogout }) {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUserState] = useState(user);
 
   const handleLogout = () => {
     onLogout();
     navigate('/login');
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    // Update local state and persist to storage
+    setCurrentUserState(updatedUser);
+    setCurrentUser(updatedUser);
   };
 
   return (
@@ -26,10 +35,7 @@ function AdultDashboard({ user, onLogout }) {
               <Nav.Link as={Link} to="/adult/chores">Chores</Nav.Link>
               <Nav.Link as={Link} to="/adult/service">Service</Nav.Link>
             </Nav>
-            <Nav>
-              <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
-              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
-            </Nav>
+            <UserMenu user={currentUser} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
           </Navbar.Collapse>
         </Container>
       </Navbar>

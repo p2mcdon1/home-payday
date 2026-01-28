@@ -4,13 +4,21 @@ import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import api from '../utils/api';
 import Chores from './user/Chores';
 import AccountTransactions from './user/AccountTransactions';
+import UserMenu from './common/UserMenu';
+import { setCurrentUser } from '../utils/auth';
 
 function UserDashboard({ user, onLogout }) {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUserState] = useState(user);
 
   const handleLogout = () => {
     onLogout();
     navigate('/login');
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    setCurrentUserState(updatedUser);
+    setCurrentUser(updatedUser);
   };
 
   return (
@@ -24,10 +32,7 @@ function UserDashboard({ user, onLogout }) {
               <Nav.Link as={Link} to="/user/accounts">Accounts</Nav.Link>
               <Nav.Link as={Link} to="/user/chores">Chores</Nav.Link>
             </Nav>
-            <Nav>
-              <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
-              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
-            </Nav>
+            <UserMenu user={currentUser} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
           </Navbar.Collapse>
         </Container>
       </Navbar>

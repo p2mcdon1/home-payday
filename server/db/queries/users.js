@@ -113,4 +113,13 @@ module.exports = {
     WHERE "id" = $2
       AND "deletedOn" IS NULL
   `,
+
+  // Update user name
+  updateName: `
+    UPDATE public.users
+    SET "name" = $1
+    WHERE "id" = $2
+      AND "deletedOn" IS NULL
+    RETURNING "id", "name", "role", "createdOn"
+  `,
 };

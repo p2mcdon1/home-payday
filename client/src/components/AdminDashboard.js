@@ -1,17 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 import UsersList from './admin/UsersList';
 import UserDetail from './admin/UserDetail';
 import Chores from './admin/Chores';
 import Service from './admin/Service';
+import UserMenu from './common/UserMenu';
+import { setCurrentUser } from '../utils/auth';
 
 function AdminDashboard({ user, onLogout }) {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUserState] = useState(user);
 
   const handleLogout = () => {
     onLogout();
     navigate('/login');
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    setCurrentUserState(updatedUser);
+    setCurrentUser(updatedUser);
   };
 
   return (
@@ -26,10 +34,7 @@ function AdminDashboard({ user, onLogout }) {
               <Nav.Link as={Link} to="/admin/chores">Chores</Nav.Link>
               <Nav.Link as={Link} to="/admin/service">Service</Nav.Link>
             </Nav>
-            <Nav>
-              <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
-              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
-            </Nav>
+            <UserMenu user={currentUser} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
           </Navbar.Collapse>
         </Container>
       </Navbar>

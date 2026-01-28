@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar, Container, Card, Table, Spinner, Nav, Button, Form, Toast, ToastContainer } from 'react-bootstrap';
+import { Navbar, Container, Card, Table, Spinner, Nav, Button, Form, Toast, ToastContainer, Modal } from 'react-bootstrap';
 import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import api from '../utils/api';
 import Chores from './kid/Chores';
 import AccountTransactions from './kid/AccountTransactions';
+import UserMenu from './common/UserMenu';
+import { setCurrentUser } from '../utils/auth';
 
 function KidDashboard({ user, onLogout }) {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUserState] = useState(user);
 
   const handleLogout = () => {
     onLogout();
     navigate('/login');
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    // Update local state and persist to storage
+    setCurrentUserState(updatedUser);
+    setCurrentUser(updatedUser);
   };
 
   return (
@@ -24,10 +33,7 @@ function KidDashboard({ user, onLogout }) {
               <Nav.Link as={Link} to="/kid/accounts">Accounts</Nav.Link>
               <Nav.Link as={Link} to="/kid/chores">Chores</Nav.Link>
             </Nav>
-            <Nav>
-              <Navbar.Text className="me-3">Welcome, {user.name}</Navbar.Text>
-              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
-            </Nav>
+            <UserMenu user={currentUser} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
           </Navbar.Collapse>
         </Container>
       </Navbar>
@@ -50,11 +56,19 @@ function AccountsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [accountName, setAccountName] = useState('');
 
   useEffect(() => {
     fetchAccounts();
   }, []);
+
+  // Show modal prompt when kid has no accounts
+  useEffect(() => {
+    if (!loading && accounts.length === 0) {
+      setShowCreateModal(true);
+    }
+  }, [loading, accounts.length]);
 
   // Auto-dismiss error toast after 5 seconds
   useEffect(() => {
@@ -80,10 +94,15 @@ function AccountsView() {
 
   const handleCreateAccount = async (e) => {
     e.preventDefault();
+    if (!accountName.trim()) {
+      setError('Account name is required');
+      return;
+    }
     try {
-      await api.post('/kid/accounts', { name: accountName });
+      await api.post('/kid/accounts', { name: accountName.trim() });
       setAccountName('');
       setShowCreateForm(false);
+      setShowCreateModal(false);
       fetchAccounts();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create account');
@@ -149,11 +168,52 @@ function AccountsView() {
         </Card>
       )}
 
+      {/* Prompt Modal for kids with no accounts */}
+      <Modal show={showCreateModal} onHide={() => {}} backdrop="static" keyboard={false}>
+        <Modal.Header>
+          <Modal.Title>Welcome! Create Your First Account</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="mb-3">
+            You need to create an account to get started. This account will be used to track your earnings and payments.
+          </p>
+          <Form onSubmit={handleCreateAccount}>
+            <Form.Group className="mb-3">
+              <Form.Label>Account Name *</Form.Label>
+              <Form.Control
+                type="text"
+                value={accountName}
+                onChange={(e) => setAccountName(e.target.value)}
+                placeholder="Enter account name (e.g., Savings, Spending)"
+                maxLength={100}
+                autoFocus
+                required
+              />
+              <Form.Text className="text-muted">
+                Choose a name that helps you identify this account.
+              </Form.Text>
+            </Form.Group>
+            <div className="d-flex justify-content-end gap-2">
+              <Button type="submit" variant="primary">
+                Create Account
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
       {accounts.length === 0 ? (
         <Card>
           <Card.Body className="text-center">
             <Card.Title>No Accounts</Card.Title>
             <Card.Text>Create your first account to get started.</Card.Text>
+            <Button 
+              variant="primary" 
+              onClick={() => setShowCreateForm(true)}
+              className="mt-3"
+            >
+              Create Account
+            </Button>
           </Card.Body>
         </Card>
       ) : (

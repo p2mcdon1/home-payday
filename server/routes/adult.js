@@ -13,6 +13,69 @@ const router = express.Router();
 
 // Note: Authentication and adult check are handled in index.js
 
+// Get current adult's profile
+router.get('/profile', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT "id", "name", "role", "createdOn"
+       FROM public.users
+       WHERE "id" = $1 AND "deletedOn" IS NULL`,
+      [req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User profile not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
+
+// Update current adult's profile name
+router.put('/profile',
+  [
+    body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Name must be between 1 and 100 characters'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { name } = req.body;
+
+      // Check if name is already taken by another user
+      const existingUser = await db.query(
+        userQueries.checkUserExists,
+        [name.trim()]
+      );
+
+      if (existingUser.rows.length > 0 && existingUser.rows[0].id !== req.user.id) {
+        return res.status(400).json({ error: 'Name is already taken' });
+      }
+
+      // Update the name
+      const result = await db.query(
+        userQueries.updateName,
+        [name.trim(), req.user.id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'User profile not found' });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ error: 'Failed to update profile' });
+    }
+  }
+);
+
 // Get all users (kids and adults)
 router.get('/kids', async (req, res) => {
   try {

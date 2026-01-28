@@ -6,6 +6,7 @@ const accountQueries = require('../db/queries/accounts');
 const choreQueries = require('../db/queries/chores');
 const effortQueries = require('../db/queries/efforts');
 const balanceUtils = require('../utils/balance');
+const avatarUtils = require('../utils/avatar');
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ router.put('/profile',
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { name } = req.body;
+      const { name, avatar } = req.body;
 
       // Check if name is already taken by another user
       const existingUser = await db.query(
@@ -64,6 +65,27 @@ router.put('/profile',
 
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'User profile not found' });
+      }
+
+      // Update avatar if provided
+      if (avatar !== undefined) {
+        let avatarBase64 = null;
+        if (avatar) {
+          try {
+            avatarBase64 = await avatarUtils.processAvatarData(avatar);
+          } catch (error) {
+            return res.status(400).json({ error: error.message });
+          }
+        }
+        
+        const avatarResult = await db.query(
+          userQueries.updateAvatar,
+          [avatarBase64, req.user.id]
+        );
+        
+        if (avatarResult.rows.length > 0) {
+          result.rows[0].avatar = avatarResult.rows[0].avatar;
+        }
       }
 
       res.json(result.rows[0]);
@@ -107,15 +129,25 @@ router.get('/accounts', async (req, res) => {
 // Create new account for current user
 router.post('/accounts', async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, avatar } = req.body;
 
     if (!name || name.trim().length === 0) {
       return res.status(400).json({ error: 'Account name is required' });
     }
 
+    // Process avatar if provided
+    let avatarBase64 = null;
+    if (avatar) {
+      try {
+        avatarBase64 = await avatarUtils.processAvatarData(avatar);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+    }
+
     const result = await db.query(
       accountQueries.createAccount,
-      [name.trim(), req.user.id]
+      [name.trim(), req.user.id, avatarBase64]
     );
 
     // Fetch the account with balance (will be 0)

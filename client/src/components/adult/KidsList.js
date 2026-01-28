@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Form, Table, Alert, Spinner, Toast, ToastContainer } from 'react-bootstrap';
 import api from '../../utils/api';
+import Avatar from '../common/Avatar';
+import AvatarInput from '../common/AvatarInput';
 
 function KidsList() {
   const [users, setUsers] = useState([]);
@@ -13,6 +15,7 @@ function KidsList() {
     name: '',
     role: 'kid',
     password: '',
+    avatar: null,
   });
   const navigate = useNavigate();
 
@@ -37,7 +40,7 @@ function KidsList() {
     try {
       await api.post('/adult/kids', formData);
       setShowCreateForm(false);
-      setFormData({ name: '', role: 'kid', password: '' });
+      setFormData({ name: '', role: 'kid', password: '', avatar: null });
       fetchUsers();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create user');
@@ -163,6 +166,12 @@ function KidsList() {
                   required
                 />
               </Form.Group>
+              <AvatarInput
+                value={formData.avatar}
+                onChange={(avatar) => setFormData({ ...formData, avatar })}
+                name={formData.name}
+                label="Avatar (Optional)"
+              />
               <Button type="submit" variant="primary">
                 Create Kid
               </Button>
@@ -190,7 +199,12 @@ function KidsList() {
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id}>
-                    <td>{user.name}</td>
+                    <td>
+                      <div className="d-flex align-items-center gap-2">
+                        <Avatar avatar={user.avatar} name={user.name} size="sm" />
+                        <span>{user.name}</span>
+                      </div>
+                    </td>
                     <td>{user.role}</td>
                     <td>{new Date(user.createdOn).toLocaleDateString()}</td>
                     <td>

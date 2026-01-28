@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Card, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import api from '../../utils/api';
+import Avatar from '../common/Avatar';
 
 function KidDetail() {
   const { id } = useParams();
@@ -76,8 +77,13 @@ function KidDetail() {
         <Card.Body>
           <Card.Title className="mb-4">Kid Details</Card.Title>
           <div className="mb-4 pb-3 border-bottom">
-            <p className="mb-2"><strong>Name:</strong> {user.name}</p>
-            <p className="mb-2"><strong>Role:</strong> {user.role}</p>
+            <div className="d-flex align-items-center gap-3 mb-3">
+              <Avatar avatar={user.avatar} name={user.name} size="lg" />
+              <div>
+                <p className="mb-1"><strong>Name:</strong> {user.name}</p>
+                <p className="mb-0"><strong>Role:</strong> {user.role}</p>
+              </div>
+            </div>
             {user.currentBalance !== undefined && (
               <p className="mb-0">
                 <strong>Current Balance:</strong>{' '}

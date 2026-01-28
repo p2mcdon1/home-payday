@@ -5,6 +5,8 @@ import api from '../utils/api';
 import Chores from './kid/Chores';
 import AccountTransactions from './kid/AccountTransactions';
 import UserMenu from './common/UserMenu';
+import Avatar from './common/Avatar';
+import AvatarInput from './common/AvatarInput';
 import { setCurrentUser } from '../utils/auth';
 
 function KidDashboard({ user, onLogout }) {
@@ -58,6 +60,7 @@ function AccountsView() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [accountName, setAccountName] = useState('');
+  const [accountAvatar, setAccountAvatar] = useState(null);
 
   useEffect(() => {
     fetchAccounts();
@@ -99,8 +102,12 @@ function AccountsView() {
       return;
     }
     try {
-      await api.post('/kid/accounts', { name: accountName.trim() });
+      await api.post('/kid/accounts', { 
+        name: accountName.trim(),
+        avatar: accountAvatar 
+      });
       setAccountName('');
+      setAccountAvatar(null);
       setShowCreateForm(false);
       setShowCreateModal(false);
       fetchAccounts();
@@ -160,6 +167,12 @@ function AccountsView() {
                   maxLength={100}
                 />
               </Form.Group>
+              <AvatarInput
+                value={accountAvatar}
+                onChange={(avatar) => setAccountAvatar(avatar)}
+                name={accountName}
+                label="Avatar (Optional)"
+              />
               <Button type="submit" variant="primary">
                 Create Account
               </Button>
@@ -178,26 +191,32 @@ function AccountsView() {
             You need to create an account to get started. This account will be used to track your earnings and payments.
           </p>
           <Form onSubmit={handleCreateAccount}>
-            <Form.Group className="mb-3">
-              <Form.Label>Account Name *</Form.Label>
-              <Form.Control
-                type="text"
-                value={accountName}
-                onChange={(e) => setAccountName(e.target.value)}
-                placeholder="Enter account name (e.g., Savings, Spending)"
-                maxLength={100}
-                autoFocus
-                required
+              <Form.Group className="mb-3">
+                <Form.Label>Account Name *</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.target.value)}
+                  placeholder="Enter account name (e.g., Savings, Spending)"
+                  maxLength={100}
+                  autoFocus
+                  required
+                />
+                <Form.Text className="text-muted">
+                  Choose a name that helps you identify this account.
+                </Form.Text>
+              </Form.Group>
+              <AvatarInput
+                value={accountAvatar}
+                onChange={(avatar) => setAccountAvatar(avatar)}
+                name={accountName}
+                label="Avatar (Optional)"
               />
-              <Form.Text className="text-muted">
-                Choose a name that helps you identify this account.
-              </Form.Text>
-            </Form.Group>
-            <div className="d-flex justify-content-end gap-2">
-              <Button type="submit" variant="primary">
-                Create Account
-              </Button>
-            </div>
+              <div className="d-flex justify-content-end gap-2">
+                <Button type="submit" variant="primary">
+                  Create Account
+                </Button>
+              </div>
           </Form>
         </Modal.Body>
       </Modal>
@@ -231,7 +250,12 @@ function AccountsView() {
               <tbody>
                 {accounts.map((account) => (
                     <tr key={account.id}>
-                      <td>{account.name}</td>
+                      <td>
+                        <div className="d-flex align-items-center gap-2">
+                          <Avatar avatar={account.avatar} name={account.name} size="sm" />
+                          <span>{account.name}</span>
+                        </div>
+                      </td>
                       <td className="fw-bold">
                         ${parseFloat(account.balance || 0).toFixed(2)}
                       </td>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Tab, Card, Table, Button, Form, Alert, Spinner, Modal, Toast, ToastContainer } from 'react-bootstrap';
 import api from '../../utils/api';
+import Avatar from '../common/Avatar';
+import AvatarInput from '../common/AvatarInput';
 
 function Chores() {
   const [activeTab, setActiveTab] = useState('chores');
@@ -19,7 +21,8 @@ function Chores() {
     link: '',
     enabled: true,
     lifecycleId: '',
-    rateId: ''
+    rateId: '',
+    avatar: null
   });
 
   // Lifecycles state
@@ -98,7 +101,8 @@ function Chores() {
       link: chore.link || '',
       enabled: chore.enabled !== undefined ? chore.enabled : true,
       lifecycleId: chore.lifecycleId,
-      rateId: chore.rateId
+      rateId: chore.rateId,
+      avatar: chore.avatar || null
     });
     setShowChoreForm(true);
   };
@@ -131,7 +135,8 @@ function Chores() {
       link: '',
       enabled: true,
       lifecycleId: '',
-      rateId: ''
+      rateId: '',
+      avatar: null
     });
   };
 
@@ -351,6 +356,12 @@ function Chores() {
                     ))}
                   </Form.Select>
                 </Form.Group>
+                <AvatarInput
+                  value={choreFormData.avatar}
+                  onChange={(avatar) => setChoreFormData({ ...choreFormData, avatar })}
+                  name={choreFormData.name}
+                  label="Avatar (Optional)"
+                />
                 <Button type="submit" variant="primary">Save</Button>
                 <Button type="button" variant="secondary" className="ms-2" onClick={() => { setShowChoreForm(false); resetChoreForm(); }}>
                   Cancel
@@ -379,7 +390,12 @@ function Chores() {
                   <tbody>
                     {chores.map((chore) => (
                       <tr key={chore.id}>
-                        <td>{chore.name}</td>
+                        <td>
+                          <div className="d-flex align-items-center gap-2">
+                            <Avatar avatar={chore.avatar} name={chore.name} size="sm" />
+                            <span>{chore.name}</span>
+                          </div>
+                        </td>
                         <td>{chore.description || '-'}</td>
                         <td>{chore.link ? <a href={chore.link} target="_blank" rel="noopener noreferrer">Link</a> : '-'}</td>
                         <td>{chore.enabled ? 'Yes' : 'No'}</td>

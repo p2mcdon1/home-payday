@@ -32,7 +32,8 @@ module.exports = {
     SELECT 
       "id",
       "name",
-      "role"
+      "role",
+      ENCODE("avatar", 'base64') as "avatar"
     FROM public.users
     WHERE "id" = $1
       AND "deletedOn" IS NULL
@@ -41,9 +42,9 @@ module.exports = {
 
   // Create new user
   createUser: `
-    INSERT INTO public.users ("name", "password", "role")
-    VALUES ($1, $2, $3)
-    RETURNING "id", "name", "role", "createdOn"
+    INSERT INTO public.users ("name", "password", "role", "avatar")
+    VALUES ($1, $2, $3, CASE WHEN ($4::text) IS NULL THEN NULL ELSE DECODE($4::text, 'base64') END)
+    RETURNING "id", "name", "role", "createdOn", ENCODE("avatar", 'base64') as "avatar"
   `,
 
   // Get all users (not deleted)
@@ -54,7 +55,8 @@ module.exports = {
       "role",
       "createdOn",
       "deletedOn",
-      "lockedUntil"
+      "lockedUntil",
+      ENCODE("avatar", 'base64') as "avatar"
     FROM public.users
     WHERE "deletedOn" IS NULL
     ORDER BY "createdOn" DESC
@@ -68,7 +70,8 @@ module.exports = {
       "role",
       "createdOn",
       "deletedOn",
-      "lockedUntil"
+      "lockedUntil",
+      ENCODE("avatar", 'base64') as "avatar"
     FROM public.users
     WHERE "id" = $1
       AND "deletedOn" IS NULL
@@ -120,6 +123,15 @@ module.exports = {
     SET "name" = $1
     WHERE "id" = $2
       AND "deletedOn" IS NULL
-    RETURNING "id", "name", "role", "createdOn"
+    RETURNING "id", "name", "role", "createdOn", ENCODE("avatar", 'base64') as "avatar"
+  `,
+
+  // Update user avatar
+  updateAvatar: `
+    UPDATE public.users
+    SET "avatar" = CASE WHEN ($1::text) IS NULL THEN NULL ELSE DECODE($1::text, 'base64') END
+    WHERE "id" = $2
+      AND "deletedOn" IS NULL
+    RETURNING "id", "name", "role", ENCODE("avatar", 'base64') as "avatar"
   `,
 };

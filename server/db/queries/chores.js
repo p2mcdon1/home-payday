@@ -14,6 +14,7 @@ module.exports = {
       c."description",
       c."link",
       c."enabled",
+      ENCODE(c."avatar", 'base64') as "avatar",
       cl."id" as "lifecycleId",
       cl."infinite",
       cl."daily",
@@ -38,19 +39,21 @@ module.exports = {
       c."link",
       c."enabled",
       c."lifecycleId",
-      c."rateId"
+      c."rateId",
+      ENCODE(c."avatar", 'base64') as "avatar"
     FROM public.chores c
     WHERE c."id" = $1
   `,
 
   // Create new chore
   createChore: `
-    INSERT INTO public.chores ("name", "description", "link", "enabled", "lifecycleId", "rateId")
-    VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING "id", "name", "description", "link", "enabled", "lifecycleId", "rateId"
+    INSERT INTO public.chores ("name", "description", "link", "enabled", "lifecycleId", "rateId", "avatar")
+    VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN ($7::text) IS NULL THEN NULL ELSE DECODE($7::text, 'base64') END)
+    RETURNING "id", "name", "description", "link", "enabled", "lifecycleId", "rateId", ENCODE("avatar", 'base64') as "avatar"
   `,
 
   // Update chore
+  // Note: $8 (avatar) - if NULL, keeps existing avatar; if empty string '', clears avatar; if base64 string, updates avatar
   updateChore: `
     UPDATE public.chores
     SET "name" = $2,
@@ -58,9 +61,14 @@ module.exports = {
         "link" = $4,
         "enabled" = $5,
         "lifecycleId" = $6,
-        "rateId" = $7
+        "rateId" = $7,
+        "avatar" = CASE 
+          WHEN ($8::text) IS NULL THEN "avatar"
+          WHEN $8::text = '' THEN NULL
+          ELSE DECODE($8::text, 'base64')
+        END
     WHERE "id" = $1
-    RETURNING "id", "name", "description", "link", "enabled", "lifecycleId", "rateId"
+    RETURNING "id", "name", "description", "link", "enabled", "lifecycleId", "rateId", ENCODE("avatar", 'base64') as "avatar"
   `,
 
   // Delete chore (soft delete - if we add deletedOn later)
@@ -194,6 +202,7 @@ module.exports = {
       c."name",
       c."description",
       c."link",
+      ENCODE(c."avatar", 'base64') as "avatar",
       cl."id" as "lifecycleId",
       cl."infinite",
       cl."daily",

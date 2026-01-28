@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Nav, NavDropdown, Modal, Form, Button, Toast, ToastContainer } from 'react-bootstrap';
 import api from '../../utils/api';
 import WelcomeText from './WelcomeText';
+import AvatarInput from './AvatarInput';
 
 /**
  * User menu component with dropdown containing Edit Profile and Logout options
@@ -13,12 +14,14 @@ import WelcomeText from './WelcomeText';
 function UserMenu({ user, onLogout, onUserUpdate }) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [name, setName] = useState(user?.name || '');
+  const [avatar, setAvatar] = useState(user?.avatar || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const handleEditClick = () => {
     setName(user?.name || '');
+    setAvatar(user?.avatar || null);
     setError('');
     setSuccess('');
     setShowEditModal(true);
@@ -38,7 +41,10 @@ function UserMenu({ user, onLogout, onUserUpdate }) {
     try {
       // Determine the correct API endpoint based on user role
       const endpoint = user?.role === 'adult' ? '/adult/profile' : '/kid/profile';
-      const response = await api.put(endpoint, { name: name.trim() });
+      const response = await api.put(endpoint, { 
+        name: name.trim(),
+        avatar: avatar 
+      });
       
       setSuccess('Profile updated successfully!');
       
@@ -83,12 +89,15 @@ function UserMenu({ user, onLogout, onUserUpdate }) {
     }
   }, [error]);
 
-  // Update name when user prop changes
+  // Update name and avatar when user prop changes
   useEffect(() => {
     if (user?.name) {
       setName(user.name);
     }
-  }, [user?.name]);
+    if (user?.avatar !== undefined) {
+      setAvatar(user.avatar);
+    }
+  }, [user?.name, user?.avatar]);
 
   return (
     <>
@@ -152,6 +161,12 @@ function UserMenu({ user, onLogout, onUserUpdate }) {
                 autoFocus
               />
             </Form.Group>
+            <AvatarInput
+              value={avatar}
+              onChange={(newAvatar) => setAvatar(newAvatar)}
+              name={name}
+              label="Avatar (Optional)"
+            />
             <div className="d-flex justify-content-end gap-2">
               <Button 
                 variant="secondary" 

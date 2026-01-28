@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Spinner, Badge, Toast, ToastContainer, Button, Modal, Form } from 'react-bootstrap';
 import api from '../../utils/api';
+import Avatar from '../common/Avatar';
 
 function Chores() {
   const [chores, setChores] = useState([]);
@@ -212,7 +213,12 @@ function Chores() {
               <tbody>
                 {chores.map((chore) => (
                   <tr key={chore.id}>
-                    <td className="fw-bold">{chore.name}</td>
+                    <td>
+                      <div className="d-flex align-items-center gap-2">
+                        <Avatar avatar={chore.avatar} name={chore.name} size="sm" />
+                        <span className="fw-bold">{chore.name}</span>
+                      </div>
+                    </td>
                     <td>{chore.description || '-'}</td>
                     <td>
                       {chore.link ? (

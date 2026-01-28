@@ -18,6 +18,7 @@ module.exports = {
       a."lockedOn",
       a."lastBalanceId",
       COALESCE(b."amount", 0) as "balance",
+      ENCODE(a."avatar", 'base64') as "avatar",
       (
         EXISTS (
           SELECT 1
@@ -41,9 +42,9 @@ module.exports = {
 
   // Create new account
   createAccount: `
-    INSERT INTO public.accounts ("name", "ownedByUserId")
-    VALUES ($1, $2)
-    RETURNING "id", "name", "ownedByUserId", "createdOn"
+    INSERT INTO public.accounts ("name", "ownedByUserId", "avatar")
+    VALUES ($1, $2, CASE WHEN ($3::text) IS NULL THEN NULL ELSE DECODE($3::text, 'base64') END)
+    RETURNING "id", "name", "ownedByUserId", "createdOn", ENCODE("avatar", 'base64') as "avatar"
   `,
 
   // Get account by ID (not deleted)
@@ -56,11 +57,21 @@ module.exports = {
       a."deletedOn",
       a."lockedOn",
       a."lastBalanceId",
-      COALESCE(b."amount", 0) as "balance"
+      COALESCE(b."amount", 0) as "balance",
+      ENCODE(a."avatar", 'base64') as "avatar"
     FROM public.accounts a
     LEFT JOIN public.balances b ON a."lastBalanceId" = b."id"
     WHERE a."id" = $1
       AND a."deletedOn" IS NULL
+  `,
+
+  // Update account avatar
+  updateAccountAvatar: `
+    UPDATE public.accounts
+    SET "avatar" = CASE WHEN ($1::text) IS NULL THEN NULL ELSE DECODE($1::text, 'base64') END
+    WHERE "id" = $2
+      AND "deletedOn" IS NULL
+    RETURNING "id", "name", ENCODE("avatar", 'base64') as "avatar"
   `,
 
   // Get oldest account for a user (sorted by createdOn)

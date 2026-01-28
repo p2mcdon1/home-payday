@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const accountQueries = require('../db/queries/accounts');
+const choreQueries = require('../db/queries/chores');
 
 const router = express.Router();
 
@@ -108,6 +109,21 @@ router.get('/transactions', async (req, res) => {
   } catch (error) {
     console.error('Error fetching transactions:', error);
     res.status(500).json({ error: 'Failed to fetch transactions' });
+  }
+});
+
+// Get available chores for current user
+router.get('/chores', async (req, res) => {
+  try {
+    const result = await db.query(
+      choreQueries.getAvailableChores,
+      [req.user.id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching available chores:', error);
+    res.status(500).json({ error: 'Failed to fetch available chores' });
   }
 });
 

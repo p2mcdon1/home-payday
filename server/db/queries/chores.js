@@ -167,4 +167,67 @@ module.exports = {
     DELETE FROM public.choreRates
     WHERE "id" = $1
   `,
+
+  // Get available chores for a user based on current day and lifecycle rules
+  // This query checks:
+  // 1. Chore is enabled
+  // 2. Lifecycle matches current day (infinite, daily, or day mask)
+  // 3. Effort limits (maxPerDay, maxPerHour) are not exceeded
+  getAvailableChores: `
+    WITH current_day_of_week AS (
+      SELECT EXTRACT(DOW FROM CURRENT_TIMESTAMP)::INTEGER as "dayOfWeek"
+    ),
+    today_efforts AS (
+      SELECT 
+        e."choreId",
+        COUNT(*) FILTER (WHERE DATE(e."effortedOn") = CURRENT_DATE) as "effortsToday",
+        COUNT(*) FILTER (
+          WHERE DATE(e."effortedOn") = CURRENT_DATE 
+          AND EXTRACT(HOUR FROM e."effortedOn") = EXTRACT(HOUR FROM CURRENT_TIMESTAMP)
+        ) as "effortsThisHour"
+      FROM public.efforts e
+      WHERE e."loggedByUserId" = $1
+      GROUP BY e."choreId"
+    )
+    SELECT 
+      c."id",
+      c."name",
+      c."description",
+      c."link",
+      cl."id" as "lifecycleId",
+      cl."infinite",
+      cl."daily",
+      cl."daysOfWeekMask",
+      cl."maxPerDay",
+      cl."maxPerHour",
+      cr."id" as "rateId",
+      cr."each",
+      cr."formula",
+      COALESCE(te."effortsToday", 0) as "effortsToday",
+      COALESCE(te."effortsThisHour", 0) as "effortsThisHour"
+    FROM public.chores c
+    JOIN public.choreLifecycles cl ON c."lifecycleId" = cl."id"
+    JOIN public.choreRates cr ON c."rateId" = cr."id"
+    CROSS JOIN current_day_of_week cdow
+    LEFT JOIN today_efforts te ON c."id" = te."choreId"
+    WHERE c."enabled" = true
+      AND (
+        -- Infinite chores are always available
+        cl."infinite" = true
+        -- Daily chores are always available
+        OR cl."daily" = true
+        -- Check if current day is enabled in the mask
+        -- DOW: Sunday=0, Monday=1, ..., Saturday=6
+        -- Mask: Sunday=1 (2^0), Monday=2 (2^1), ..., Saturday=64 (2^6)
+        OR (
+          cl."daysOfWeekMask" IS NOT NULL 
+          AND (cl."daysOfWeekMask" & CAST(POWER(2, cdow."dayOfWeek") AS INTEGER)) != 0
+        )
+      )
+      -- Check maxPerDay limit
+      AND (cl."maxPerDay" IS NULL OR COALESCE(te."effortsToday", 0) < cl."maxPerDay")
+      -- Check maxPerHour limit
+      AND (cl."maxPerHour" IS NULL OR COALESCE(te."effortsThisHour", 0) < cl."maxPerHour")
+    ORDER BY c."name"
+  `,
 };

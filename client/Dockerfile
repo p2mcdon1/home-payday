@@ -1,33 +1,22 @@
-# Build stage
+# Stage 1: Build
 FROM node:20-alpine AS builder
-
 WORKDIR /app
-
-# Copy dependency files
-COPY package.json package-lock.json* ./
-
-# Install dependencies (including devDependencies for build)
-RUN npm ci
-
-# Copy source code
+COPY package*.json ./
+RUN npm install
 COPY . .
-
-# Build the app (outputs to ./build)
+# Using the ARG/ENV pattern we discussed for your backend
+ARG API_URL_ARG=http://payroll-api.home
+ENV REACT_APP_API_URL=$API_URL_ARG
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
+# Stage 2: Serve
+FROM nginx:stable-alpine
+# 1. Remove the default Nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+# 2. Copy your custom config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+# 3. Copy the build files
+COPY --from=builder /app/build /usr/share/nginx/html
 
-WORKDIR /app
-
-# Install serve to run the static build
-RUN npm install -g serve
-
-# Copy built assets from builder
-COPY --from=builder /app/build ./build
-
-# Default port for serve
-EXPOSE 3000
-
-# Serve the static site; -s for SPA fallback to index.html
-CMD ["serve", "-s", "build", "-l", "3000"]
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

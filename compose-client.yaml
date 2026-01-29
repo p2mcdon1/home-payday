@@ -1,0 +1,22 @@
+services:
+  payroll-client:
+    container_name: payroll-client
+    image: payroll-client:latest
+    environment:
+      - REACT_APP_API_URL=http://payroll-api.home
+    networks:
+      - web-proxy
+    labels:
+       - "traefik.enable=true"
+       # The domain you want to use
+       - "traefik.http.routers.payroll-client.rule=Host(`payroll.home`)"
+       # Tell Traefik which port your app is actually running on inside the container
+       - "traefik.http.services.payroll-client.loadbalancer.server.port=80"
+       # If you want to use HTTPS, you can add the following lines:
+       # Use the HTTPS entrypoint we defined in the Traefik file
+       #- "traefik.http.routers.payroll-client.entrypoints=websecure"
+       # Use the "myresolver" Let's Encrypt setting
+       #- "traefik.http.routers.payroll-client.tls.certresolver=myresolver"
+networks:
+  web-proxy:
+    external: true

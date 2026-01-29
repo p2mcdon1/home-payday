@@ -1,8 +1,13 @@
 import axios from 'axios';
 import { getAuthToken, removeAuthToken } from './auth';
 
+// REACT_APP_API_URL: backend base URL (e.g. http://localhost:3001). Omit or leave empty for same-origin.
+const baseURL = process.env.REACT_APP_API_URL
+  ? `${process.env.REACT_APP_API_URL.replace(/\/$/, '')}/api`
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL,
 });
 
 // Add token to requests

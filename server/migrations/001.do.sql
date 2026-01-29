@@ -15,19 +15,19 @@ CREATE TABLE IF NOT EXISTS public.users (
 );
 
 -- Indexes for users
-CREATE INDEX IF NOT EXISTS idx_users_name ON public.users("name");
+CREATE INDEX IF NOT EXISTS idx_users_name ON public.users(LOWER("name"));
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users("role");
 
 -- Unique constraint on name for non-deleted users only
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name_unique ON public.users("name") WHERE "deletedOn" IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name_unique ON public.users(LOWER("name")) WHERE "deletedOn" IS NULL;
 
 -- 2. Seed default adult user
 INSERT INTO public.users ("name", "password", "role")
-SELECT 'adult', 'adult123', 'adult'
+SELECT 'Dad', '123', 'adult'
 WHERE NOT EXISTS (
     SELECT 1 
     FROM public.users 
-    WHERE "name" = 'adult' 
+    WHERE LOWER("name") = LOWER('Dad') 
       AND "deletedOn" IS NULL
 );
 

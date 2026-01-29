@@ -10,7 +10,7 @@ module.exports = {
   checkUserExists: `
     SELECT "id" 
     FROM public.users 
-    WHERE "name" = $1 
+    WHERE LOWER("name") = LOWER($1)
       AND "deletedOn" IS NULL
   `,
 
@@ -22,7 +22,7 @@ module.exports = {
       "password",
       "role"
     FROM public.users
-    WHERE "name" = $1
+    WHERE LOWER("name") = LOWER($1)
       AND "deletedOn" IS NULL
       AND ("lockedUntil" IS NULL OR "lockedUntil" < CURRENT_TIMESTAMP)
   `,
